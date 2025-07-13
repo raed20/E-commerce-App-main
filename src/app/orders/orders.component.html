@@ -1,0 +1,46 @@
+!<!-- Flowbite CSS (after Tailwind) -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.0/flowbite.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.0/flowbite.min.js"></script>
+
+<!-- Table Component: Search Table -->
+<div class="container mt-5">
+    <table id="search-table" class="table table-striped">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Total Amount</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let commande of commandes" (click)="showDetails(commande)" style="cursor: pointer;">
+                <td>{{ commande.id }}</td>
+                <td>{{ commande.montant | number:'1.2-2'  }}</td>
+                <td>{{ commande.dateCommande}}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div *ngIf="selectedCommande" class="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50">
+    <div class="bg-white p-5 rounded shadow-lg w-96">
+        <h2 class="text-2xl font-semibold mb-4">Order Details</h2>
+        <h3 class="text-lg mb-4">Products in this order:</h3>
+        <ul>
+            <li *ngFor="let item of selectedCommande.details">
+                Product : {{ productNameMap.get(item.productid) | async }}, Quantity: {{ item.qte }}
+            </li>
+        </ul>
+        <button (click)="closeDetails()" class="mt-4 p-2 bg-red-500 text-white rounded">Close</button>
+    </div>
+</div>
+<!-- Initialize DataTable -->
+<script>
+if (document.getElementById("search-table") && typeof simpleDatatables.DataTable !== 'undefined') {
+    const dataTable = new simpleDatatables.DataTable("#search-table", {
+        searchable: true,
+        sortable: false
+    });
+}
+</script>

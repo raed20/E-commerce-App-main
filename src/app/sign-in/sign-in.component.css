@@ -1,0 +1,44 @@
+/* Container to center the form */
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Full-screen height */
+    background-color: #f8f9fa;
+    max-width: 100%; /* Light background color */
+  }
+  
+  /* Styling for the form */
+  .auth-form {
+    width: 400px; /* Fixed width */
+    padding: 20px;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add a subtle shadow */
+    border-radius: 8px;
+  }
+  
+  .form-outline .form-control {
+    height: 45px;
+    border-color: #ced4da;
+  }
+  
+  .form-outline .form-label {
+    font-size: 14px;
+    color: #495057;
+  }
+  
+  .text-center p {
+    margin-top: 15px;
+    font-size: 14px;
+  }
+  .error-message {
+    color: red; /* Text color */
+    background-color: #f8d7da; /* Light red background */
+    border: 1px solid #f5c2c7; /* Slightly darker red border */
+    padding: 10px; /* Padding inside the box */
+    border-radius: 4px; /* Rounded corners */
+    margin-bottom: 15px; /* Space below the message */
+    font-size: 14px; /* Text size */
+    text-align: center; /* Center the text */
+  }
+  

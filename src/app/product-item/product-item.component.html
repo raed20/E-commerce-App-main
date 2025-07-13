@@ -1,0 +1,49 @@
+<div class="product-item">
+    <span class="badge bg-success position-absolute m-3">-{{produit?.discountPercentage}}%</span>
+    <a href="#" class="btn-wishlist">
+      <svg width="24" height="24">
+        <use xlink:href="#heart"></use>
+      </svg>
+    </a>
+    <figure>
+      <a [routerLink]="['/product/detail', produit?.id]" title="Product Title">
+        <img [src]="produit?.thumbnail" class="tab-image">
+      </a>
+    </figure>
+    <h3>{{produit?.title}}</h3>
+    <span class="qty">{{produit?.stock}} Unit</span>
+    <span class="rating">
+      <svg width="24" height="24" class="text-primary">
+        <use xlink:href="#star-solid"></use>
+      </svg> {{produit?.rating}}
+    </span>
+    <span class="price">{{produit?.price}}</span>
+    <div class="d-flex align-items-center justify-content-between">
+      <div class="input-group product-qty">
+        <span class="input-group-btn">
+          <button (click)="decrementQuantity()" type="button" class="quantity-left-minus btn btn-danger btn-number" data-type="minus">
+            <svg width="16" height="16">
+              <use xlink:href="#minus"></use>
+            </svg>
+          </button>
+        </span>
+        <input type="text" id="quantity" name="quantity" class="form-control input-number" [(ngModel)]="quantity" value="1">
+        <span class="input-group-btn">
+          <button (click)="incrementQuantity()" type="button" class="quantity-right-plus btn btn-success btn-number" data-type="plus">
+            <svg width="16" height="16">
+              <use xlink:href="#plus"></use>
+            </svg>
+          </button>
+        </span>
+      </div>
+      <button
+        class="btn btn-primary"
+        style="margin-left: 5px; height: 40px; width:100px; white-space: nowrap;"
+        (click)="addToPanier()"
+        [disabled]="getState()"
+      >
+        Add to Cart
+      </button>
+
+    </div>
+  </div>

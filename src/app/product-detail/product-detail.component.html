@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+    <defs>
+<symbol xmlns="http://www.w3.org/2000/svg" id="star-solid" viewBox="0 0 15 15">
+    <path fill="currentColor" d="M7.953 3.788a.5.5 0 0 0-.906 0L6.08 5.85l-2.154.33a.5.5 0 0 0-.283.843l1.574 1.613l-.373 2.284a.5.5 0 0 0 .736.518l1.92-1.063l1.921 1.063a.5.5 0 0 0 .736-.519l-.373-2.283l1.574-1.613a.5.5 0 0 0-.283-.844L8.921 5.85l-.968-2.062Z"/>
+</symbol>
+</defs>
+</svg>
+<section >
+    <div class="container px-4 px-lg-5 ">
+        <div class="row gx-4 gx-lg-5 align-items-center">
+            <div class="col-md-5">
+                <img class="card-img-top mb-5 mb-md-0" [src]="produit?.thumbnail" alt="{{produit?.title}}" />
+            </div>
+            <div class="col-md-6" style="margin-left: 15px;">
+                <h1 class="display-5 fw-bolder">{{produit?.title}}</h1>
+                <div class="fs-5 mb-5">
+                    <span><svg width="24" height="24" class="text-primary">
+                        <use xlink:href="#star-solid"></use>
+                      </svg> {{produit?.rating}} </span> <!-- Original price if applicable -->
+                    <span class="price text-primary" style="margin-left: 15px;">{{produit?.price}} $</span> <!-- Display current price -->
+                </div>
+                <p class="lead">{{produit?.description}}</p>
+                <div class="d-flex">
+                    <input 
+                    class="form-control text-center me-3" 
+                    id="inputQuantity" 
+                    type="number" 
+                    [(ngModel)]="quantity" 
+                    [min]="1" 
+                    style="max-width: 3rem" 
+                    />
+                    <button 
+                        class="btn btn-success flex-shrink-0" 
+                        type="button"  
+                        (click)="addToPanier()"                   >
+                        <i class="bi-cart-fill me-1"></i>
+                        Add to cart
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <app-comment [productId]="productId ?? 0"></app-comment>
+
+</section>

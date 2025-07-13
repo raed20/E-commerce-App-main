@@ -1,0 +1,108 @@
+/* Container to center the form */
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Full-screen height */
+  background-color: #f8f9fa;
+  max-width: 100%; /* Light background color */
+}
+
+/* Styling for the form */
+.auth-form {
+  width: 400px; /* Fixed width */
+  padding: 20px;
+  background-color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add a subtle shadow */
+  border-radius: 8px;
+}
+  
+  /* Form input fields */
+  .form-outline {
+    position: relative;
+  }
+  
+  .form-control {
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    transition: border-color 0.3s ease;
+  }
+  
+  .form-control:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  }
+  
+  /* Labels styling */
+  .form-label {
+    font-size: 14px;
+    margin-bottom: 5px;
+    color: #6c757d;
+  }
+  
+  /* Checkbox styling */
+  .form-check-input {
+    margin-top: 0.3rem;
+  }
+  
+  .form-check-label {
+    margin-left: 5px;
+    font-size: 14px;
+  }
+  
+  /* Submit button */
+  .btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+    padding: 10px 20px;
+    border-radius: 4px;
+    width: 100%;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .btn-primary:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Social buttons */
+  .btn-link {
+    color: #007bff;
+    font-size: 20px;
+    transition: color 0.3s ease;
+  }
+  
+  .btn-link:hover {
+    color: #0056b3;
+  }
+  
+  /* Miscellaneous */
+  .text-center {
+    margin-top: 20px;
+  }
+  
+  .mb-4 {
+    margin-bottom: 1.5rem !important;
+  }
+  
+  @media (max-width: 576px) {
+    .container {
+      padding: 10px;
+      max-width: 90%;
+    }
+  }
+  /* Styling for the error message */
+  .error-message {
+    color: red; /* Text color */
+    background-color: #f8d7da; /* Light red background */
+    border: 1px solid #f5c2c7; /* Slightly darker red border */
+    padding: 10px; /* Padding inside the box */
+    border-radius: 4px; /* Rounded corners */
+    margin-bottom: 15px; /* Space below the message */
+    font-size: 14px; /* Text size */
+    text-align: center; /* Center the text */
+  }
+
+  

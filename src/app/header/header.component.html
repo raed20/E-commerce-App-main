@@ -1,0 +1,118 @@
+
+<header>
+    <div class="container-fluid">
+      <div class="row py-3 border-bottom">
+        
+        <div class="col-sm-4 col-lg-3 text-center text-sm-start">
+          <div class="main-logo" style="display: flex; align-items: center; margin-left: 10px;">
+            <a href="#" >
+              <img src="images/logo.png" alt="logo" class="img-fluid ml-4">
+              
+            </a>
+            <h2 class="fw-bold mb-0 ms-2" style="font-family: 'Roboto', sans-serif;color: #3cc374;">SHOPFER</h2>
+          </div>
+        </div>
+        
+        <div class="col-sm-6 offset-sm-2 offset-md-0 col-lg-5 d-none d-lg-block">
+          <app-search-bar></app-search-bar>
+        </div>
+        
+        <div class="col-sm-8 col-lg-4 d-flex justify-content-end gap-5 align-items-center mt-4 mt-sm-0 justify-content-center justify-content-sm-end">
+
+          <ul class="d-flex justify-content-end list-unstyled m-0">
+            <li>
+              <a routerLink="profile" class="rounded-circle bg-light p-2 mx-1">
+                <svg width="24" height="24" viewBox="0 0 24 24"><use xlink:href="#user"></use></svg>
+              </a>
+            </li>
+            <li>
+              <a href="#" class="rounded-circle bg-light p-2 mx-1">
+                <svg width="24" height="24" viewBox="0 0 24 24"><use xlink:href="#heart"></use></svg>
+              </a>
+            </li>
+            <li class="d-lg-none">
+              <a href="#" class="rounded-circle bg-light p-2 mx-1" data-bs-toggle="offcanvas" data-bs-target="#offcanvasCart" aria-controls="offcanvasCart">
+                <svg width="24" height="24" viewBox="0 0 24 24"><use xlink:href="#cart"></use></svg>
+              </a>
+            </li>
+            <li class="d-lg-none">
+              <a href="#" class="rounded-circle bg-light p-2 mx-1" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSearch" aria-controls="offcanvasSearch">
+                <svg width="24" height="24" viewBox="0 0 24 24"><use xlink:href="#search"></use></svg>
+              </a>
+            </li>
+          </ul>
+          <div class="cart text-end d-none d-lg-block dropdown">
+            <button routerLink="login" *ngIf="!Authenticated;else loggedIn" class="btn btn-dark" style="margin-right:5px ;">
+              Log in
+            </button>
+            <ng-template #loggedIn>
+            <button class="btn btn-dark" style="margin-right:5px ;" (click)="toggleAuth()">
+              Log out
+            </button>
+            </ng-template>
+            <button class="btn btn-primary" (click)="toggleCart()">
+                Show Cart
+            </button>
+        </div>       
+        </div>
+        <app-cart></app-cart> 
+      </div>
+    </div>
+    <div class="container-fluid">
+        <div class="row py-3">
+          <div class="d-flex justify-content-center justify-content-sm-between align-items-center">
+            <nav class="main-menu d-flex navbar navbar-expand-lg">
+              
+              <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
+                <span class="navbar-toggler-icon"></span>
+              </button>
+      
+              <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+                <div class="offcanvas-header justify-content-center">
+                  <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                </div>
+                
+                <div class="offcanvas-body">
+                  <select class="filter-categories border-0 mb-0 me-5">
+                    <option>Shop by Departments</option>
+                  </select>
+      
+                  <ul class="navbar-nav justify-content-end menu-list list-unstyled d-flex gap-md-3 mb-0">
+                    <li class="nav-item active">
+                      <a href="#women" class="nav-link">Women</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                      <a href="#men" class="nav-link">Men</a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#kids" class="nav-link">Kids</a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#accessories" class="nav-link">Accessories</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                      <a class="nav-link dropdown-toggle" role="button" id="pages" data-bs-toggle="dropdown" aria-expanded="false">Pages</a>
+                      <ul class="dropdown-menu" aria-labelledby="pages">
+                        <li><a routerLink="about" class="dropdown-item">About</a></li>
+                        <li><a routerLink="orders" class="dropdown-item">My Orders</a></li>
+                        <li><a routerLink="myAccount" class="dropdown-item">My Account</a></li>
+                      </ul>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#brand" class="nav-link">Brand</a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#sale" class="nav-link">Sale</a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#blog" class="nav-link">Blog</a>
+                    </li>
+                  </ul>
+                </div> <!-- Closing the offcanvas-body -->
+              </div> <!-- Closing the offcanvas -->
+              
+            </nav>
+          </div>
+        </div>
+      </div>      
+  </header>

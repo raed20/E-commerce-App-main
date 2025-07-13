@@ -1,0 +1,73 @@
+<!-- Comments Section -->
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+<div class="p-4 bg-white " style="margin-left:50px;margin-right: 50px;">
+    <article *ngFor="let comment of comments" class="border-b last:border-0 pb-4 mb-4">
+        <!-- Comment structure -->
+        <div class="flex items-start mb-4">
+            <img class="w-10 h-10 rounded-full mr-3" src="/path/to/default-avatar.jpg" alt="User Profile Picture">
+            <div class="flex-1">
+                <div class="font-medium dark:text-white">
+                    <p>{{ comment.userName }} 
+                        <time [attr.datetime]="comment.createdAt | date:'yyyy-MM-ddTHH:mm:ss'" 
+                              class="block text-sm text-gray-500 dark:text-gray-400">
+                            {{ comment.createdAt | date:'MMMM yyyy' }}
+                        </time>
+                    </p>
+                </div>
+
+                <div class="flex items-center mb-1">
+                    <ng-container *ngFor="let star of [1,2,3,4,5]; let i = index">
+                        <svg class="w-4 h-4" 
+                             [ngClass]="{'text-yellow-300': i < comment.rating, 'text-gray-300 dark:text-gray-500': i >= comment.rating}" 
+                             aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 22 20">
+                            <path d="M20.924 7.625a1.523 1.523 0 0 0-1.238-1.044l-5.051-.734-2.259-4.577a1.534 1.534 0 0 0-2.752 0L7.365 5.847l-5.051.734A1.535 1.535 0 0 0 1.463 9.2l3.656 3.563-.863 5.031a1.532 1.532 0 0 0 2.226 1.616L11 17.033l4.518 2.375a1.534 1.534 0 0 0 2.226-1.617l-.863-5.03L20.537 9.2a1.523 1.523 0 0 0 .387-1.575Z"/>
+                        </svg>
+                    </ng-container>
+                </div>
+
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ comment.comment }}</h3>
+                
+                <footer class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    <p>Reviewed on <time [attr.datetime]="comment.createdAt | date:'yyyy-MM-ddTHH:mm:ss'">{{ comment.createdAt | date:'longDate' }}</time></p>
+                </footer>
+            </div>
+        </div>
+    </article>
+</div>
+
+<!-- Add Review Button -->
+<div class="mt-6 flex justify-center" style="margin-bottom: 20px;">
+    <button (click)="openReviewForm()" 
+            class="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-700 dark:hover:bg-blue-800 dark:focus:ring-blue-900">
+        Add Review
+    </button>
+</div>
+<div *ngIf="showReviewForm" class="mt-6 flex justify-center">
+    <form [formGroup]="reviewForm" class="max-w-md w-full p-4 border rounded-lg bg-gray-50 dark:bg-gray-800" (ngSubmit)="submitForm()">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Rating</label>
+        <div class="flex mb-4">
+            <ng-container *ngFor="let star of [1, 2, 3, 4, 5]; let i = index">
+                <svg (click)="onStarClick(star)" 
+                     class="w-6 h-6 cursor-pointer" 
+                     [ngClass]="{'text-yellow-300': star <= reviewForm.get('rating')?.value, 'text-gray-300': star > reviewForm.get('rating')?.value}" 
+                     aria-hidden="true" 
+                     xmlns="http://www.w3.org/2000/svg" 
+                     fill="currentColor" 
+                     viewBox="0 0 22 20">
+                    <path d="M20.924 7.625a1.523 1.523 0 0 0-1.238-1.044l-5.051-.734-2.259-4.577a1.534 1.534 0 0 0-2.752 0L7.365 5.847l-5.051.734A1.535 1.535 0 0 0 1.463 9.2l3.656 3.563-.863 5.031a1.532 1.532 0 0 0 2.226 1.616L11 17.033l4.518 2.375a1.534 1.534 0 0 0 2.226-1.617l-.863-5.03L20.537 9.2a1.523 1.523 0 0 0 .387-1.575Z"/>
+                </svg>
+            </ng-container>
+        </div>
+
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Comment</label>
+        <textarea formControlName="comment" rows="4" class="mt-1 mb-4 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+
+        <button type="submit" class="px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 focus:outline-none focus:ring-4 focus:ring-green-300 dark:bg-green-700 dark:hover:bg-green-800 dark:focus:ring-green-900" 
+                [disabled]="!reviewForm.valid">
+            Submit Review
+        </button>
+    </form>
+</div>
+
+
