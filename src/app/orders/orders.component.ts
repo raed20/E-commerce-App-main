@@ -39,7 +39,7 @@ export class OrdersComponent implements OnInit {
       }
     });
   }
-  
+
 
   showDetails(commande: Commande) {
     this.selectedCommande = commande;
@@ -55,7 +55,7 @@ export class OrdersComponent implements OnInit {
       // Clear previous product names to avoid mix-up between different commandes
       this.productNameMap.clear();
 
-      // Iterate over each item in selectedCommande and load product names
+      // Iterate over each item in selectedCommande and load product names 
       for (const item of this.selectedCommande.details) {
         const productId = item.productid;
         // Store each product name as a Promise in the map
