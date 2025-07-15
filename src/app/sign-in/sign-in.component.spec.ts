@@ -4,27 +4,33 @@ import { AuthService } from '../services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { of, throwError } from 'rxjs';
 import { Router } from '@angular/router';
+import { RouterTestingModule } from '@angular/router/testing';
 
 describe('SignInComponent', () => {
   let component: SignInComponent;
   let fixture: ComponentFixture<SignInComponent>;
   let authServiceSpy: jasmine.SpyObj<AuthService>;
-  let routerSpy: jasmine.SpyObj<Router>;
+  let router: Router;
 
   beforeEach(async () => {
     authServiceSpy = jasmine.createSpyObj('AuthService', ['login']);
-    routerSpy = jasmine.createSpyObj('Router', ['navigateByUrl']);
 
     await TestBed.configureTestingModule({
-      imports: [SignInComponent, FormsModule],
+      imports: [
+        SignInComponent,
+        FormsModule,
+        RouterTestingModule.withRoutes([]) // Configuration avec routes vides
+      ],
       providers: [
-        { provide: AuthService, useValue: authServiceSpy },
-        { provide: Router, useValue: routerSpy }
+        { provide: AuthService, useValue: authServiceSpy }
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(SignInComponent);
     component = fixture.componentInstance;
+    router = TestBed.inject(Router); // Récupère le router du TestBed
+    spyOn(router, 'navigateByUrl'); // Espionne la méthode navigateByUrl
+    fixture.detectChanges();
   });
 
   it('should create the component', () => {
@@ -33,16 +39,16 @@ describe('SignInComponent', () => {
 
   it('should call login and navigate on successful login', () => {
     component.email = 'test@example.com';
-    component.password = 'password123';
-    authServiceSpy.login.and.returnValue(of(void 0)); // ✅ retourne void
+    component.password = 'Password123';
+    authServiceSpy.login.and.returnValue(of(void 0));
 
     component.register();
 
-    expect(authServiceSpy.login).toHaveBeenCalledWith('test@example.com', 'password123');
-    expect(routerSpy.navigateByUrl).toHaveBeenCalledWith('/home');
+    expect(authServiceSpy.login).toHaveBeenCalledWith('test@example.com', 'Password123');
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/home');
   });
 
-  it('should show error message on login failure', () => {
+  it('should set errorMess on login failure', () => {
     const error = { code: 'auth/invalid-credentials' };
     authServiceSpy.login.and.returnValue(throwError(() => error));
 
