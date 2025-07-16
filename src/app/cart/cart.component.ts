@@ -6,35 +6,39 @@ import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-cart',
-  standalone:true,
-  imports:[CommonModule,RouterLink],
+  standalone: true,
+  imports: [CommonModule, RouterLink],
   templateUrl: './cart.component.html',
   styleUrls: ['./cart.component.css'],
 })
 export class CartComponent implements OnInit {
   isVisible = true;
-  cartDetails: CartItem[]=[];
-  totalPrice:number=0;
-  constructor(private cs: CartService) {}
+  cartDetails: CartItem[] = [];
+  totalPrice: number = 0;
+  
+  constructor(private readonly cs: CartService) {}
 
   ngOnInit() {
     // Subscribe to the cartVisibility$ to track visibility changes
     this.cs.cartVisibility$.subscribe(visible => {
       this.isVisible = visible;
     });
+    
     this.cs.cartDetails$.subscribe((items: CartItem[]) => {
       this.cartDetails = items;
       this.totalPrice = this.cs.getTotal(); // Recalculate total when the cart changes
-    })
+    });
   }
+  
   toggleCart() {
     this.cs.toggleCart();
   }
-  valider(){
+  
+  valider() {
     this.cs.validerPanier();
   }
-  removeItem(item:CartItem){
+  
+  removeItem(item: CartItem) {
     this.cs.removeItem(item);
   }
-
 }
