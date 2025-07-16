@@ -109,7 +109,7 @@
     $('.product-qty').each(function(){
 
       let $el_product = $(this);
-      let quantity = 0;
+
 
       $el_product.find('.quantity-right-plus').click(function(e){
           e.preventDefault();

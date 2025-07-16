@@ -88,5 +88,14 @@ await TestBed.configureTestingModule({
     expect(component.products.length).toBe(1);
     expect(component.products[0].category).toBe('Accessories');
   });
+it('should call getAllProducts if no search query and category is All Categories', () => {
+  const spy = spyOn(component, 'getAllProducts');
+  component.searchQuery = '';
+  component.category = 'All Categories';
+
+  component.filterProducts();
+
+  expect(spy).toHaveBeenCalled();
+});
 
 });

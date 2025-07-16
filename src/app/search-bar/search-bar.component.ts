@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { ProductService } from '../services/product.service';
 import { CommonModule } from '@angular/common';
 import { debounceTime } from 'rxjs/operators';
-import { FormsModule } from '@angular/forms'; 
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-search-bar',

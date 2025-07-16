@@ -15,7 +15,7 @@ import { User } from './models/user';
   standalone: true,
   imports: [RouterOutlet,HeaderComponent,ListProductComponent,FooterComponent,SignUpComponent,CommonModule,SignInComponent],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+ 
 })
 export class AppComponent implements OnInit{
   title = 'shopfer';
@@ -27,7 +27,7 @@ export class AppComponent implements OnInit{
       this.showNavbar = !(this.router.url.includes('/login')||(this.router.url.includes('/sign-up')));
     });
   }
-  
+
   ngOnInit(): void {
     this.as.user$.subscribe((user: User | null) => {
       if (user) {

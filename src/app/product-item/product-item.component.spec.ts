@@ -1,11 +1,9 @@
-
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ProductItemComponent } from './product-item.component';
 import { CartService } from '../services/cart.service';
 import { Product } from '../models/product';
 import { FormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
-import { By } from '@angular/platform-browser';
 
 describe('ProductItemComponent', () => {
   let component: ProductItemComponent;
@@ -43,6 +41,29 @@ describe('ProductItemComponent', () => {
   it('should create the component', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should set Available to true if stock > 0 on ngOnInit', () => {
+    component.produit.stock = 10;
+    component.ngOnInit();
+    expect(component.Available).toBeTrue();
+  });
+
+  it('should set Available to false if stock <= 0 on ngOnInit', () => {
+    component.produit.stock = 0;
+    component.ngOnInit();
+    expect(component.Available).toBeFalse();
+  });
+
+  it('should return green from getColor() if stock > 0', () => {
+    component.produit.stock = 5;
+    expect(component.getColor()).toBe('green');
+  });
+
+  it('should return red from getColor() if stock <= 0', () => {
+    component.produit.stock = 0;
+    expect(component.getColor()).toBe('red');
+  });
+
   it('should return correct state from getState()', () => {
     component.produit.stock = 3;
     expect(component.getState()).toBeFalse();
@@ -75,5 +96,16 @@ describe('ProductItemComponent', () => {
     expect(cartServiceSpy.addToCart).toHaveBeenCalled();
     expect(cartServiceSpy.addToCart.calls.mostRecent().args[0].product.title).toBe('Test Product');
     expect(window.alert).toHaveBeenCalledWith('Test Product added to cart!');
+  });
+
+  it('should not call addToCart if produit is undefined in addToPanier', () => {
+    component.produit = undefined as any;
+    cartServiceSpy.addToCart.calls.reset();
+    spyOn(window, 'alert');
+
+    component.addToPanier();
+
+    expect(cartServiceSpy.addToCart).not.toHaveBeenCalled();
+    expect(window.alert).not.toHaveBeenCalled();
   });
 });
