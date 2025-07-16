@@ -9,7 +9,6 @@ import { RouterLink } from '@angular/router';
   standalone: true,
   imports: [CommonModule, RouterLink],
   templateUrl: './cart.component.html',
- 
 })
 export class CartComponent implements OnInit {
   isVisible = true;
