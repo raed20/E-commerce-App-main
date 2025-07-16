@@ -15,7 +15,8 @@ export class SignUpComponent {
   userName: string = '';
   password: string = '';
   errorMess: string|null=null;
-  constructor(private as: AuthService, private r: Router) {}
+
+  constructor(private readonly as: AuthService, private readonly r: Router) {}
 
   register() {
     if (this.email && this.userName && this.password) {

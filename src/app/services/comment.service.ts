@@ -8,11 +8,11 @@ import { BehaviorSubject } from 'rxjs';
   providedIn: 'root'
 })
 export class CommentService {
-  private storageKey = 'comments'; // Key for local storage
+  private readonly storageKey = 'comments'; // Key for local storage
   private commentsSubject = new BehaviorSubject<Comment[]>(this.getCommentsFromLocalStorage()); // Initialize with local storage comments
   comments$ = this.commentsSubject.asObservable(); // Expose comments as observable
 
-  constructor(private as: AuthService, private router: Router) {}
+constructor(private readonly as: AuthService, private readonly router: Router) {}
 
   // Fetch comments for a specific product
   getCommentsByProductId(productId: number): Comment[] {
@@ -32,7 +32,7 @@ export class CommentService {
       this.router.navigate(['/login']);
     }
   }
-  
+
 
   // Helper function to get comments from local storage
   private getCommentsFromLocalStorage(): Comment[] {

@@ -1,20 +1,21 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Product } from '../models/product';
-import { Observable } from 'rxjs';
-import { BehaviorSubject } from 'rxjs';
+import { Observable ,BehaviorSubject  } from 'rxjs';
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProductService {
-  private searchQuerySubject = new BehaviorSubject<string>('');
-  private categorySubject = new BehaviorSubject<string>('');
+  private  readonly  searchQuerySubject = new BehaviorSubject<string>('');
+private readonly categorySubject = new BehaviorSubject<string>('');
 
   // Observable properties for components to subscribe to
   searchQuery$ = this.searchQuerySubject.asObservable();
   category$ = this.categorySubject.asObservable();
-  constructor(private http:HttpClient) {}
+ constructor(private readonly http: HttpClient) {}
+
   getAllProducts(){
     return this.http.get('https://dummyjson.com/products');
   }
@@ -38,5 +39,5 @@ export class ProductService {
   setCategory(category: string) {
     this.categorySubject.next(category);
   }
-  
+
 }

@@ -2,9 +2,9 @@
 
   "use strict";
 
-  var initPreloader = function() {
+  let initPreloader = function() {
     $(document).ready(function($) {
-    var Body = $('body');
+    let Body = $('body');
         Body.addClass('preloader-site');
     });
     $(window).load(function() {
@@ -14,16 +14,16 @@
   }
 
   // init Chocolat light box
-	var initChocolat = function() {
+	let initChocolat = function() {
 		Chocolat(document.querySelectorAll('.image-link'), {
 		  imageSize: 'contain',
 		  loop: true,
 		})
 	}
 
-  var initSwiper = function() {
+  let initSwiper = function() {
 
-    var swiper = new Swiper(".main-swiper", {
+    let swiper = new Swiper(".main-swiper", {
       speed: 500,
       pagination: {
         el: ".swiper-pagination",
@@ -31,7 +31,7 @@
       },
     });
 
-    var category_swiper = new Swiper(".category-carousel", {
+    let category_swiper = new Swiper(".category-carousel", {
       slidesPerView: 6,
       spaceBetween: 30,
       speed: 500,
@@ -55,7 +55,7 @@
       }
     });
 
-    var brand_swiper = new Swiper(".brand-carousel", {
+    let brand_swiper = new Swiper(".brand-carousel", {
       slidesPerView: 4,
       spaceBetween: 30,
       speed: 500,
@@ -79,7 +79,7 @@
       }
     });
 
-    var products_swiper = new Swiper(".products-carousel", {
+    let products_swiper = new Swiper(".products-carousel", {
       slidesPerView: 5,
       spaceBetween: 30,
       speed: 500,
@@ -104,22 +104,22 @@
     });
   }
 
-  var initProductQty = function(){
+  let initProductQty = function(){
 
     $('.product-qty').each(function(){
 
-      var $el_product = $(this);
-      var quantity = 0;
+      let $el_product = $(this);
+      let quantity = 0;
 
       $el_product.find('.quantity-right-plus').click(function(e){
           e.preventDefault();
-          var quantity = parseInt($el_product.find('#quantity').val());
+          let quantity = parseInt($el_product.find('#quantity').val());
           $el_product.find('#quantity').val(quantity + 1);
       });
 
       $el_product.find('.quantity-left-minus').click(function(e){
           e.preventDefault();
-          var quantity = parseInt($el_product.find('#quantity').val());
+          let quantity = parseInt($el_product.find('#quantity').val());
           if(quantity>0){
             $el_product.find('#quantity').val(quantity - 1);
           }
@@ -130,7 +130,7 @@
   }
 
   // init jarallax parallax
-  var initJarallax = function() {
+  let initJarallax = function() {
     jarallax(document.querySelectorAll(".jarallax"));
 
     jarallax(document.querySelectorAll(".jarallax-keep-img"), {
@@ -140,7 +140,7 @@
 
   // document ready
   $(document).ready(function() {
-    
+
     initPreloader();
     initSwiper();
     initProductQty();
