@@ -11,15 +11,19 @@ import { User } from '@angular/fire/auth';
   selector: 'app-orders',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './orders.component.html',
-  styleUrls: ['./orders.component.css'] // Fix typo from `styleUrl` to `styleUrls`
+  templateUrl: './orders.component.html'
 })
 export class OrdersComponent implements OnInit {
   commandes: Commande[] = [];
   selectedCommande: Commande | null = null;
   productNameMap: Map<number, Promise<string>> = new Map();
 
-  constructor(private commandeService: CommandeService, private ps: ProductService,private as:AuthService,private dp:DatePipe) {}
+  constructor(
+    private readonly commandeService: CommandeService, 
+    private readonly ps: ProductService,
+    private readonly as: AuthService,
+    private readonly dp: DatePipe
+  ) {}
 
   ngOnInit(): void {
     this.loadOrders();
@@ -33,13 +37,12 @@ export class OrdersComponent implements OnInit {
           // Format dateCommande for each Commande
           this.commandes = data.map(commande => ({
             ...commande,
-            dateCommande: this.dp.transform(commande.dateCommande, 'yyyy-MM-dd') || ''  // Reformat date
+            dateCommande: this.dp.transform(commande.dateCommande, 'yyyy-MM-dd') ?? ''  // Reformat date
           }));
         });
       }
     });
   }
-
 
   showDetails(commande: Commande) {
     this.selectedCommande = commande;

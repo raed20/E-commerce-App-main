@@ -23,7 +23,8 @@
 
   let initSwiper = function() {
 
-    let swiper = new Swiper(".main-swiper", {
+    // eslint-disable-next-line no-new
+    new Swiper(".main-swiper", {
       speed: 500,
       pagination: {
         el: ".swiper-pagination",
@@ -31,7 +32,8 @@
       },
     });
 
-    let category_swiper = new Swiper(".category-carousel", {
+    // eslint-disable-next-line no-new
+    new Swiper(".category-carousel", {
       slidesPerView: 6,
       spaceBetween: 30,
       speed: 500,
@@ -55,7 +57,8 @@
       }
     });
 
-    let brand_swiper = new Swiper(".brand-carousel", {
+    // eslint-disable-next-line no-new
+    new Swiper(".brand-carousel", {
       slidesPerView: 4,
       spaceBetween: 30,
       speed: 500,
@@ -79,7 +82,8 @@
       }
     });
 
-    let products_swiper = new Swiper(".products-carousel", {
+    // eslint-disable-next-line no-new
+    new Swiper(".products-carousel", {
       slidesPerView: 5,
       spaceBetween: 30,
       speed: 500,
@@ -109,7 +113,6 @@
     $('.product-qty').each(function(){
 
       let $el_product = $(this);
-
 
       $el_product.find('.quantity-right-plus').click(function(e){
           e.preventDefault();

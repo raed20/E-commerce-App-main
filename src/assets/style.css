@@ -382,7 +382,7 @@ h1,h2,h3,h4,h5,h6 {
 }
 
 .banner-ad .banner-content .categories {
-  font-family: 'Garamond';
+  font-family: 'Garamond', serif;
   font-size: 37px;
   text-transform: capitalize;
   color: var(--dark-color);
