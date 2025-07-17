@@ -13,12 +13,10 @@ export class CommentService {
   comments$ = this.commentsSubject.asObservable(); // Expose comments as observable
 
 constructor(private readonly as: AuthService, private readonly router: Router) {}
-
   // Fetch comments for a specific product
   getCommentsByProductId(productId: number): Comment[] {
     return this.commentsSubject.value.filter(comment => comment.productId === productId);
   }
-
   // Add a comment if the user is authenticated
   addComment(newComment: Comment) {
     const isAuthenticated = this.as.getAuthState();
@@ -32,14 +30,11 @@ constructor(private readonly as: AuthService, private readonly router: Router) {
       this.router.navigate(['/login']);
     }
   }
-
-
   // Helper function to get comments from local storage
   private getCommentsFromLocalStorage(): Comment[] {
     const commentsJson = localStorage.getItem(this.storageKey);
     return commentsJson ? JSON.parse(commentsJson) : [];
   }
-
   // Helper function to save comments to local storage
   private saveCommentsToLocalStorage(comments: Comment[]): void {
     localStorage.setItem(this.storageKey, JSON.stringify(comments));

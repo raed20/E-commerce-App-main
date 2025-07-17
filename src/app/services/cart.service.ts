@@ -48,7 +48,7 @@ export class CartService {
   removeItem(cartItem: CartItem) {
     // Find the item in the cart by its product ID
     const existingItem = this.cartDetails.find(item => item.product.id === cartItem.product.id);
-  
+
     if (existingItem) {
       // If quantity is greater than 1, decrease it
       if (existingItem.qte > 1) {
@@ -59,15 +59,15 @@ export class CartService {
         this.cartDetails.splice(index, 1);
       }
     }
-  
+
     // Update the BehaviorSubject with the modified cart details
     this.cartDetailsSubject.next(this.cartDetails);
-  
+
     // Sync with localStorage
     localStorage.setItem('cartDetails', JSON.stringify(this.cartDetails));
   }
-  
-  
+
+
   getTotal(): number {
     let total: number = 0;
     for (let item of this.cartDetails) { // Use 'for...of' to iterate over array items
@@ -84,30 +84,30 @@ export class CartService {
       this.router.navigate(['/login']); // Redirect to login if user is not authenticated
       return;
     }
-  
+
     // Get the current authenticated user
     this.as.user$.subscribe((firebaseUser: User | null) => {
       if (firebaseUser) {
         // Get user ID and total amount
         const userId = firebaseUser.uid;
         const totalAmount = this.getTotal();
-  
+
         // Convert CartItem instances to DetailOrderDTO instances
         const detailsDTO = this.cartDetails.map(item => new OrderDto(item.product.id, item.qte));
-  
+
         // Create a new Commande with current cart details
         const newCommande = new Commande(
           userId,
           totalAmount,
           this.dp.transform(new Date(),'yyyy-MM-dd') || '',
           detailsDTO, // Use the DTO array
-          
+
         );
-  
+
         // Save the Commande using CommandeService
         this.cs.addCommande(userId, totalAmount, detailsDTO); // Pass DTO array here
         console.log("Commande validated and saved successfully.");
-  
+
         // Clear the cart after validation
         this.cartDetails = [];
         this.cartDetailsSubject.next(this.cartDetails);
@@ -115,6 +115,6 @@ export class CartService {
       }
     });
   }
-  
-  
+
+
 }
