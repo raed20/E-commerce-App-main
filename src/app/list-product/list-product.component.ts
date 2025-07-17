@@ -9,8 +9,7 @@ import { CartItem } from '../models/cart-item';
   selector: 'app-list-product',
   standalone: true,
   imports: [ProductItemComponent, CommonModule],
-  templateUrl: './list-product.component.html',
-  styleUrls: ['./list-product.component.css']
+  templateUrl: './list-product.component.html'
 })
 export class ListProductComponent {
   products: Product[] = [];

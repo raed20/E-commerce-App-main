@@ -10,8 +10,7 @@ import { CommentComponent } from '../comment/comment.component';
   selector: 'app-product-detail',
   standalone: true,
   imports: [FormsModule,CommentComponent],
-  templateUrl: './product-detail.component.html',
-  styleUrl: './product-detail.component.css'
+  templateUrl: './product-detail.component.html'
 })
 export class ProductDetailComponent {
   produit!:Product;

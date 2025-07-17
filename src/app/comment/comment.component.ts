@@ -15,7 +15,7 @@ import { AuthService } from '../services/auth.service';
   standalone: true,
   imports: [CommonModule, DatePipe, ReactiveFormsModule],
   templateUrl: './comment.component.html',
-  styleUrls: ['./comment.component.css'], // Fix typo from styleUrl to styleUrls
+ // styleUrls: ['./comment.component.css'], // Fix typo from styleUrl to styleUrls
   encapsulation: ViewEncapsulation.None
 })
 export class CommentComponent implements OnInit, OnDestroy {

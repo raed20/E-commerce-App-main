@@ -11,8 +11,7 @@ import { User } from '@angular/fire/auth';
   selector: 'app-orders',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './orders.component.html',
-  styleUrls: ['./orders.component.css'] // Fix typo from `styleUrl` to `styleUrls`
+  templateUrl: './orders.component.html'
 })
 export class OrdersComponent implements OnInit {
   commandes: Commande[] = [];

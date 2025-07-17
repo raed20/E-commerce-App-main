@@ -10,8 +10,7 @@ import { AuthService } from '../services/auth.service';
   selector: 'app-header',
   standalone: true,
   imports: [SearchBarComponent,CartComponent,RouterLink,CommonModule],
-  templateUrl: './header.component.html',
-  styleUrl: './header.component.css'
+  templateUrl: './header.component.html'
 })
 export class HeaderComponent {
   Authenticated: boolean = false;
