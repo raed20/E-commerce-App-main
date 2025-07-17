@@ -8,14 +8,13 @@ import { FormsModule } from '@angular/forms';
   selector: 'app-search-bar',
   standalone: true,
   imports: [CommonModule,FormsModule],
-  templateUrl: './search-bar.component.html',
-  styleUrl: './search-bar.component.css'
+  templateUrl: './search-bar.component.html'
 })
 export class SearchBarComponent {
   searchQuery: string="";
   category:string = 'All Categories';
   categories :string[]=[];
-  constructor(private ps:ProductService){};
+  constructor(private readonly ps:ProductService){};
   ngOnInit():void {
     this.getAllCats();
     this.ps.searchQuery$.pipe(debounceTime(300)).subscribe(query => {

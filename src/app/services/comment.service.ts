@@ -9,7 +9,7 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class CommentService {
   private readonly storageKey = 'comments'; // Key for local storage
-  private commentsSubject = new BehaviorSubject<Comment[]>(this.getCommentsFromLocalStorage()); // Initialize with local storage comments
+  private readonly commentsSubject = new BehaviorSubject<Comment[]>(this.getCommentsFromLocalStorage()); // Initialize with local storage comments
   comments$ = this.commentsSubject.asObservable(); // Expose comments as observable
 
 constructor(private readonly as: AuthService, private readonly router: Router) {}

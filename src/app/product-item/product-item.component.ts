@@ -1,4 +1,4 @@
-import { Component,Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { Product } from '../models/product';
 import { CommonModule } from '@angular/common';
 import { CartService } from '../services/cart.service';
@@ -9,15 +9,16 @@ import { RouterLink } from '@angular/router';
 @Component({
   selector: 'app-product-item',
   standalone: true,
-  imports: [CommonModule,FormsModule,RouterLink],
-  templateUrl: './product-item.component.html',
-  styleUrl: './product-item.component.css'
+  imports: [CommonModule, FormsModule, RouterLink],
+  templateUrl: './product-item.component.html'
 })
-export class ProductItemComponent {
+export class ProductItemComponent implements OnInit {
   @Input() produit!: Product; 
-  quantity:number=1;
+  quantity: number = 1;
   Available: boolean = false;
-  constructor(private cs :CartService){}
+  
+  // Fix 1: Mark CartService as readonly since it's never reassigned
+  constructor(private readonly cs: CartService) {}
 
   ngOnInit() {
     this.Available = this.produit.stock > 0;
@@ -25,19 +26,21 @@ export class ProductItemComponent {
 
   addToPanier() {
     if (this.produit) {
-      let ci: CartItem =new CartItem(this.produit,this.quantity);
+      let ci: CartItem = new CartItem(this.produit, this.quantity);
       this.cs.addToCart(ci);
       alert(`${this.produit.title} added to cart!`); // Optional: Notify the user
     }
   }
 
   getColor(): string {
-    return this.produit.stock> 0 ? 'green' : 'red';
+    return this.produit.stock > 0 ? 'green' : 'red';
   }
 
+  // Fix 2: Simplify boolean logic - avoid unnecessary ternary with boolean literals
   getState(): boolean {
-    return this.produit.stock> 0 ? false : true;
+    return this.produit.stock <= 0;
   }
+
   incrementQuantity() {
     this.quantity++;
   }
@@ -47,5 +50,4 @@ export class ProductItemComponent {
       this.quantity--;
     }
   }
-
 }

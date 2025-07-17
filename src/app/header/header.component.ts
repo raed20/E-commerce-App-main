@@ -15,7 +15,7 @@ import { AuthService } from '../services/auth.service';
 export class HeaderComponent {
   Authenticated: boolean = false;
 
-  constructor(private cs: CartService, private authService: AuthService) {}
+  constructor(private readonly cs: CartService, private readonly authService: AuthService) {}
 
   ngOnInit() {
     // Subscribe to the authentication state
@@ -31,5 +31,4 @@ export class HeaderComponent {
   toggleAuth() {
     this.authService.logout(); // Call the method in AuthService
   }
-
 }

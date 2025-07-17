@@ -1,13 +1,10 @@
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, ViewEncapsulation } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { CommentService } from '../services/comment.service';
 import { Comment } from '../models/comment';
-import { ActivatedRoute, Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { DatePipe } from '@angular/common';
-import { ViewEncapsulation } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ReactiveFormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
 @Component({
@@ -15,7 +12,7 @@ import { AuthService } from '../services/auth.service';
   standalone: true,
   imports: [CommonModule, DatePipe, ReactiveFormsModule],
   templateUrl: './comment.component.html',
- // styleUrls: ['./comment.component.css'], // Fix typo from styleUrl to styleUrls
+  // styleUrls: ['./comment.component.css'], // Fix typo from styleUrl to styleUrls
   encapsulation: ViewEncapsulation.None
 })
 export class CommentComponent implements OnInit, OnDestroy {
@@ -26,11 +23,11 @@ export class CommentComponent implements OnInit, OnDestroy {
   private commentsSubscription!: Subscription;
 
   constructor(
-    private commentService: CommentService,
-    private route: ActivatedRoute,
-    private fb: FormBuilder,
-    private as: AuthService,
-    private router: Router
+    private readonly commentService: CommentService,
+    private readonly route: ActivatedRoute,
+    private readonly fb: FormBuilder,
+    private readonly as: AuthService,
+    private readonly router: Router
   ) {
     this.reviewForm = this.fb.group({
       rating: [5, Validators.required],
@@ -39,21 +36,17 @@ export class CommentComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-      if (this.productId) {
-  
-        
-        this.loadComments(); // Load comments when productId is available
-        
-        // Subscribe to the comments observable after productId is set
-        this.commentsSubscription = this.commentService.comments$.subscribe(comments => {
-          console.log('Comments from service:', comments); // Log all comments
-          this.comments = this.commentService.getCommentsByProductId(this.productId);
-          console.log('Filtered comments:', this.comments); // Log filtered comments
-        });
-      }
-
+    if (this.productId) {
+      this.loadComments(); // Load comments when productId is available
+      
+      // Subscribe to the comments observable after productId is set
+      this.commentsSubscription = this.commentService.comments$.subscribe(comments => {
+        console.log('Comments from service:', comments); // Log all comments
+        this.comments = this.commentService.getCommentsByProductId(this.productId);
+        console.log('Filtered comments:', this.comments); // Log filtered comments
+      });
+    }
   }
-  
 
   loadComments(): void {
     this.comments = this.commentService.getCommentsByProductId(this.productId);
@@ -96,5 +89,4 @@ export class CommentComponent implements OnInit, OnDestroy {
       this.commentsSubscription.unsubscribe();
     }
   }
-  
 }
