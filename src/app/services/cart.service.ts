@@ -52,12 +52,19 @@ export class CartService {
 
   /* ---------- Cart mutations ---------- */
   addToCart(item: CartItem): void {
-    const list = [...this.cartDetails$.value];                       // clone
+    const list = [...this.cartDetails$.value]; // clone
     const found = list.find(c => c.product.id === item.product.id);
-    found ? (found.qte += item.qte) : list.push(item);
+
+    if (found) {
+      found.qte += item.qte;
+    } else {
+      list.push(item);
+    }
+
     this.cartDetails$.next(list);
     this.persistCart();
   }
+
 
   removeItem(item: CartItem): void {
     const list = [...this.cartDetails$.value];
