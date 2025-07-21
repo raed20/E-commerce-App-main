@@ -1,22 +1,29 @@
-# Node.js with Angular
-# Build a Node.js project that uses Angular.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
-
 trigger:
-- main
+  - main
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'  # Free hosted agent
 
 steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: '20.x'
-  displayName: 'Install Node.js'
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '22.x'
+    displayName: 'Install Node.js'
 
-- script: |
-    npm install -g @angular/cli
-    npm install
-    ng serve
-  displayName: 'npm install and serve '
+  - script: |
+      npm install -g @angular/cli
+      cd front
+      npm install
+    displayName: 'Install Angular CLI & Dependencies'
+
+  - script: |
+      cd front
+      ng build shopfer --configuration production
+    displayName: 'Build Angular Project'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathToPublish: 'front/dist/shopfer'
+      artifactName: 'angular-dist'
+      publishLocation: 'Container'
+    displayName: 'Publish Build Artifacts'
