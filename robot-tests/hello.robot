@@ -5,13 +5,13 @@ Library          Collections
 Library          String
 Library          DateTime
 Test Setup       Open Browser Setup
-Test Teardown    Close Browser And Capture On Failure
+Test Teardown    Close Browser
 Suite Setup      Log    Suite de tests e-commerce démarrée
 Suite Teardown   Log    Suite de tests e-commerce terminée
 
 *** Variables ***
 ${BASE_URL}           http://localhost:4200
-${BROWSER}            firefox
+${BROWSER}            chrome
 ${TIMEOUT}            10s
 ${INVALID_EMAIL}      invalid-email
 ${INVALID_PASSWORD}   123
