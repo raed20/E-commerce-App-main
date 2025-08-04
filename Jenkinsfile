@@ -1,15 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        // Ajout des variables pour AKS deployment
-        AZURE_CREDENTIALS = 'azure-service-principal-id'
-        RESOURCE_GROUP = 'shopfer'
-        AKS_CLUSTER_NAME = 'shopfer'
-        NAMESPACE = 'default'
-        DEPLOYMENT_NAME = 'shopfer-app'
-    }
-
     stages {
         stage('Clone repository') {
             steps {
@@ -41,15 +32,15 @@ pipeline {
             }
         }
 
-        stage('Push Docker Image to ACR') {
+        stage('Push Docker Image to Docker Hub') {
             steps {
-                bat """
-                    az acr login --name shopfer
-                    docker tag shopferimgg shopfer.azurecr.io/shopferimgg:latest
-                    docker tag shopferimgg shopfer.azurecr.io/shopferimgg:${BUILD_NUMBER}
-                    docker push shopfer.azurecr.io/shopferimgg:latest
-                    docker push shopfer.azurecr.io/shopferimgg:${BUILD_NUMBER}
-                """
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-login', usernameVariable: 'DOCKER_HUB_USER', passwordVariable: 'DOCKER_HUB_PASS')]) {
+                    bat """
+                        docker tag shopferimgg %DOCKER_HUB_USER%/shopferimgg:latest
+                        docker login -u %DOCKER_HUB_USER% -p %DOCKER_HUB_PASS%
+                        docker push %DOCKER_HUB_USER%/shopferimgg:latest
+                    """
+                }
             }
         }
 
@@ -122,51 +113,6 @@ pipeline {
                 '''
             }
         }
-
-        // ===== NOUVELLES ÉTAPES DE DÉPLOIEMENT AKS =====
-        stage('Deploy to AKS') {
-            steps {
-                withCredentials([azureServicePrincipal(AZURE_CREDENTIALS)]) {
-                    script {
-                        echo "🚀 Starting deployment to AKS..."
-
-                        bat '''
-                            az login --service-principal -u %AZURE_CLIENT_ID% -p %AZURE_CLIENT_SECRET% -t %AZURE_TENANT_ID%
-                            az account set --subscription %AZURE_SUBSCRIPTION_ID%
-                        '''
-
-                        // Get AKS credentials
-                        bat "az aks get-credentials --resource-group ${RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing"
-
-                        // Update deployment with new image
-                        bat """
-                            kubectl set image deployment/${DEPLOYMENT_NAME} shopfer-container=shopfer.azurecr.io/shopferimgg:${BUILD_NUMBER} -n ${NAMESPACE}
-                            kubectl rollout status deployment/${DEPLOYMENT_NAME} -n ${NAMESPACE} --timeout=600s
-                        """
-                    }
-                }
-            }
-        }
-
-        stage('Verify AKS Deployment') {
-            steps {
-                bat '''
-                    echo === AKS Deployment Status ===
-                    kubectl get pods -n default
-                    kubectl get services -n default
-                    kubectl describe deployment/shopfer-app -n default
-
-                    echo === Getting Application URL ===
-                    for /f "tokens=*" %%i in ('kubectl get service shopfer-service -o jsonpath="{.status.loadBalancer.ingress[0].ip}" 2^>nul') do set EXTERNAL_IP=%%i
-                    if defined EXTERNAL_IP (
-                        echo Application accessible at: http://%EXTERNAL_IP%
-                    ) else (
-                        echo External IP not yet assigned, checking service details...
-                        kubectl get service shopfer-service -o wide
-                    )
-                '''
-            }
-        }
     }
 
     post {
@@ -227,7 +173,6 @@ pipeline {
 
         success {
             echo 'Pipeline completed successfully ✅'
-            echo '🎉 Application deployed to AKS and tests passed!'
         }
 
         failure {
@@ -241,10 +186,6 @@ pipeline {
                         docker ps -a | find "shopfer" 2>nul || echo No shopfer containers
                         netstat -an | find "4200" 2>nul || echo Port 4200 not found
                         if exist robot-tests\\output.xml echo Robot test results available
-
-                        echo === AKS Diagnostic ===
-                        kubectl get pods -n default 2>nul || echo Kubectl not available
-                        kubectl get events --sort-by='.lastTimestamp' -n default 2>nul || echo Cannot get events
                     '''
                 } catch (Exception e) {
                     // Diagnostic failed - continue
@@ -253,65 +194,3 @@ pipeline {
         }
     }
 }
-// ===== À AJOUTER dans la section environment de votre pipeline =====
-environment {
-    // Vos variables existantes restent
-
-    // Nouvelles variables pour AKS
-    AZURE_CREDENTIALS = 'azure-service-principal-id'
-    RESOURCE_GROUP = 'shopfer'
-    AKS_CLUSTER_NAME = 'shopfer'
-    NAMESPACE = 'default'
-    DEPLOYMENT_NAME = 'shopfer-app'
-}
-
-// ===== À AJOUTER après votre stage 'Run Robot Framework tests' =====
-
-        stage('Deploy to AKS') {
-            steps {
-                withCredentials([azureServicePrincipal(AZURE_CREDENTIALS)]) {
-                    script {
-                        echo "🚀 Starting deployment to AKS..."
-
-                        bat '''
-                            az login --service-principal -u %AZURE_CLIENT_ID% -p %AZURE_CLIENT_SECRET% -t %AZURE_TENANT_ID%
-                            az account set --subscription %AZURE_SUBSCRIPTION_ID%
-                        '''
-
-                        // Get AKS credentials
-                        bat "az aks get-credentials --resource-group ${RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing"
-
-                        // Update deployment with new image
-                        bat """
-                            kubectl set image deployment/${DEPLOYMENT_NAME} shopfer-container=shopfer.azurecr.io/shopferimgg:${BUILD_NUMBER} -n ${NAMESPACE}
-                            kubectl rollout status deployment/${DEPLOYMENT_NAME} -n ${NAMESPACE} --timeout=600s
-                        """
-                    }
-                }
-            }
-        }
-
-        stage('Verify AKS Deployment') {
-            steps {
-                bat '''
-                    echo === AKS Deployment Status ===
-                    kubectl get pods -n default
-                    kubectl get services -n default
-
-                    echo === Getting Application URL ===
-                    for /f "tokens=*" %%i in ('kubectl get service shopfer-service -o jsonpath="{.status.loadBalancer.ingress[0].ip}" 2^>nul') do set EXTERNAL_IP=%%i
-                    if defined EXTERNAL_IP (
-                        echo Application accessible at: http://%EXTERNAL_IP%
-                    ) else (
-                        echo External IP not yet assigned, checking service details...
-                        kubectl get service shopfer-service -o wide
-                    )
-                '''
-            }
-        }
-
-// ===== À AJOUTER dans la section post → failure de votre pipeline =====
-
-                        echo === AKS Diagnostic ===
-                        kubectl get pods -n default 2>nul || echo Kubectl not available
-                        kubectl get events --sort-by='.lastTimestamp' -n default 2>nul || echo Cannot get events
