@@ -1,51 +1,57 @@
-# Étape 1: Build de l'application Angular SSR
+# -------- Step 1: Build Angular App (SSR) --------
 FROM node:18-alpine AS build
 
 WORKDIR /app
 
-# Copier les fichiers de dépendances
+# Install essential package
+RUN apk add --no-cache wget
+
+# Copy and install dependencies with retry
 COPY package*.json ./
+RUN npm config set fetch-retries 5 \
+    && npm config set fetch-retry-factor 2 \
+    && npm config set fetch-retry-mintimeout 10000 \
+    && npm config set fetch-retry-maxtimeout 60000 \
+    && npm config set registry https://registry.npmjs.org/ \
+    && npm install --legacy-peer-deps || \
+       (sleep 15 && npm cache clean --force && npm install --legacy-peer-deps)
 
-# Installer toutes les dépendances (dev incluses pour le build)
-RUN npm ci
-
-# Copier le code source
+# Copy source and build
 COPY . .
-
-# Builder l'application (Angular 18 gère SSR automatiquement)
 RUN npm run build
 
-# Debug: vérifier la structure générée
-RUN ls -la /app/front/shopfer/
-
-# Étape 2: Runtime avec Node.js pour SSR
+# -------- Step 2: Runtime (SSR Server) --------
 FROM node:18-alpine AS runtime
 
 WORKDIR /app
 
-# Copier les fichiers de package pour les dépendances de production
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S angular -u 1001
+
+# Copy only what's needed
 COPY package*.json ./
-
-# Installer seulement les dépendances de production
-RUN npm ci --only=production && npm cache clean --force
-
-# Copier les fichiers buildés depuis l'étape précédente (correction ici)
 COPY --from=build /app/front/shopfer ./dist
 
-# Créer un utilisateur non-root pour la sécurité
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S angular -u 1001
 
-# S'assurer que les permissions sont correctes
-RUN chown -R angular:nodejs /app
+# Install production dependencies only
+RUN npm config set registry https://registry.npmjs.org/ \
+    && npm install --production --legacy-peer-deps --no-audit --no-fund
+
+# Clean cache and set permissions
+RUN npm cache clean --force && \
+    chown -R angular:nodejs /app
+
 USER angular
 
-# Exposer le port
-EXPOSE 4200
-
-# Variables d'environnement
+# Expose port and env
 ENV NODE_ENV=production
 ENV PORT=4200
+EXPOSE 4200
 
-# Commande pour démarrer le serveur SSR
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD wget --spider -q http://localhost:4200/ || exit 1
+
+# Start SSR server
 CMD ["node", "dist/server/server.mjs"]
