@@ -39,8 +39,8 @@ RUN npm config set registry https://registry.npmjs.org/ \
     && npm install --production --legacy-peer-deps --no-audit --no-fund
 
 # Clean cache and set permissions
-RUN npm cache clean --force && \
-    chown -R angular:nodejs /app
+RUN chown -R angular:nodejs /app/dist
+
 
 USER angular
 
