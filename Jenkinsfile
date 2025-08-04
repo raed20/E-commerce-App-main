@@ -44,20 +44,37 @@ pipeline {
             }
         }
 
-        stage('Run Docker Container') {
+        stage('Pre-deployment Cleanup') {
             steps {
                 script {
                     try {
                         bat '''
-                            docker stop shopfer-container 2>nul || echo off
-                            docker rm shopfer-container 2>nul || echo off
+                            docker stop shopfer-container 2>nul || echo Container not running
+                            docker rm shopfer-container 2>nul || echo Container not found
+                            for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| find ":4200" ^| find "LISTENING"') do (
+                                taskkill /f /pid %%a 2^>nul || echo Process cleanup
+                            )
                         '''
                     } catch (Exception e) {
-                        // Container cleanup failed - continue
+                        echo "Pre-deployment cleanup completed"
                     }
                 }
+            }
+        }
 
+        stage('Run Docker Container') {
+            steps {
                 bat 'docker run -d --name shopfer-container -p 4200:4200 shopferimgg'
+
+                // Verify container started
+                script {
+                    sleep(5)
+                    def containerStatus = bat(script: 'docker ps --filter "name=shopfer-container" --format "{{.Status}}"', returnStdout: true).trim()
+                    if (!containerStatus.contains("Up")) {
+                        error("Container failed to start properly")
+                    }
+                    echo "Container started successfully: ${containerStatus}"
+                }
             }
         }
 
@@ -73,6 +90,7 @@ pipeline {
                             sleep(2)
                             bat 'netstat -an | find "4200" | find "LISTENING"'
                             appStarted = true
+                            echo "Application is listening on port 4200"
                         } catch (Exception e) {
                             attempt++
                             if (attempt % 10 == 0) {
@@ -82,6 +100,12 @@ pipeline {
                     }
 
                     if (!appStarted) {
+                        // Show container logs for debugging
+                        try {
+                            bat 'docker logs shopfer-container'
+                        } catch (Exception e) {
+                            echo "Could not retrieve container logs"
+                        }
                         error("Application failed to start within timeout")
                     }
                 }
@@ -126,109 +150,34 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'azure-sp', usernameVariable: 'AZURE_CLIENT_ID', passwordVariable: 'AZURE_CLIENT_SECRET')]) {
                     script {
                         try {
-                            // Login to Azure and verify access
                             bat '''
-                                echo "=== Logging into Azure ==="
                                 az login --service-principal -u %AZURE_CLIENT_ID% -p %AZURE_CLIENT_SECRET% --tenant %TENANT_ID%
+                                az aks get-credentials --resource-group %RESOURCE_GROUP% --name %CLUSTER_NAME%
 
-                                echo "=== Verifying AKS cluster access ==="
-                                az aks show --resource-group %RESOURCE_GROUP% --name %CLUSTER_NAME% --query "name" -o tsv
-                            '''
-
-                            // Get AKS credentials
-                            bat '''
-                                echo "=== Getting AKS credentials ==="
-                                az aks get-credentials --resource-group %RESOURCE_GROUP% --name %CLUSTER_NAME% --overwrite-existing
-
-                                echo "=== Testing kubectl connection ==="
-                                kubectl cluster-info
-                                kubectl get nodes
-                            '''
-
-                            // Verify Kubernetes manifests exist
-                            bat '''
-                                echo "=== Verifying Kubernetes manifests ==="
-                                if not exist "k8s" (
-                                    echo "ERROR: k8s directory not found"
-                                    exit /b 1
-                                )
-                                if not exist "k8s\\service.yaml" (
-                                    echo "ERROR: k8s/service.yaml not found"
-                                    exit /b 1
-                                )
-                                if not exist "k8s\\configmap.yaml" (
-                                    echo "ERROR: k8s/configmap.yaml not found"
-                                    exit /b 1
-                                )
-                                if not exist "k8s\\deployment.yaml" (
-                                    echo "ERROR: k8s/deployment.yaml not found"
-                                    exit /b 1
-                                )
-                                echo "All manifest files found"
-                            '''
-
-                            // Update deployment image with the correct Docker Hub reference
-                            withCredentials([usernamePassword(credentialsId: 'docker-hub-login', usernameVariable: 'DOCKER_HUB_USER', passwordVariable: 'DOCKER_HUB_PASS')]) {
-                                bat '''
-                                    echo "=== Updating deployment image reference ==="
-                                    powershell -Command "(Get-Content k8s\\deployment.yaml) -replace 'image:.*shopferimgg.*', 'image: %DOCKER_HUB_USER%/shopferimgg:latest' | Set-Content k8s\\deployment.yaml"
-                                '''
-                            }
-
-                            // Apply Kubernetes manifests
-                            bat '''
-                                echo "=== Applying Kubernetes manifests ==="
-                                kubectl apply -f k8s/configmap.yaml
+                                echo "Applying Kubernetes manifests..."
                                 kubectl apply -f k8s/service.yaml
+                                kubectl apply -f k8s/configmap.yaml
                                 kubectl apply -f k8s/deployment.yaml
 
-                                echo "=== Waiting for deployment rollout ==="
+                                echo "Waiting for deployment to be ready..."
                                 kubectl rollout status deployment/shopfer --timeout=300s
 
-                                echo "=== Deployment Status ==="
+                                echo "Checking pod status..."
                                 kubectl get pods -l app=shopfer
-                                kubectl get services
-                                kubectl describe deployment shopfer
                             '''
-
                         } catch (Exception e) {
                             echo "AKS deployment failed: ${e.getMessage()}"
-
-                            // Comprehensive diagnostics
-                            bat '''
-                                echo "=== DEPLOYMENT DIAGNOSTICS ==="
-
-                                echo "--- Current kubectl context ---"
-                                kubectl config current-context 2>nul || echo "No kubectl context set"
-
-                                echo "--- Cluster nodes ---"
-                                kubectl get nodes 2>nul || echo "Cannot get nodes"
-
-                                echo "--- All pods ---"
-                                kubectl get pods --all-namespaces 2>nul || echo "Cannot get pods"
-
-                                echo "--- Shopfer pods (if any) ---"
-                                kubectl get pods -l app=shopfer 2>nul || echo "No shopfer pods found"
-
-                                echo "--- Services ---"
-                                kubectl get services 2>nul || echo "Cannot get services"
-
-                                echo "--- Recent events ---"
-                                kubectl get events --sort-by=.metadata.creationTimestamp --field-selector type!=Normal 2>nul || echo "Cannot get events"
-
-                                echo "--- Deployment details ---"
-                                kubectl describe deployment shopfer 2>nul || echo "No shopfer deployment found"
-
-                                echo "--- ReplicaSet details ---"
-                                kubectl describe rs -l app=shopfer 2>nul || echo "No shopfer replicasets found"
-
-                                echo "--- Pod logs (if any pods exist) ---"
-                                for /f %%i in ('kubectl get pods -l app^=shopfer -o name 2^>nul') do (
-                                    echo "Logs for %%i:"
-                                    kubectl logs %%i --tail=50 2>nul || echo "Cannot get logs for %%i"
-                                )
-                            '''
-
+                            // Show diagnostic information
+                            try {
+                                bat '''
+                                    echo "=== AKS DIAGNOSTIC ==="
+                                    kubectl get pods -l app=shopfer -o wide || echo "No pods found"
+                                    kubectl describe deployment shopfer || echo "No deployment found"
+                                    kubectl get events --sort-by=.metadata.creationTimestamp | tail -10 || echo "No events"
+                                '''
+                            } catch (Exception diagnosticError) {
+                                echo "Could not retrieve AKS diagnostics"
+                            }
                             throw e
                         }
                     }
@@ -240,30 +189,6 @@ pipeline {
     post {
         always {
             script {
-                // Container cleanup
-                try {
-                    bat '''
-                        docker stop shopfer-container 2>nul || echo off
-                        docker rm shopfer-container 2>nul || echo off
-                        for /F %%i in ('docker ps -q --filter "ancestor=shopferimgg" 2^>nul') do (
-                            docker stop %%i 2^>nul && docker rm %%i 2^>nul
-                        )
-                    '''
-                } catch (Exception e) {
-                    // Cleanup failed - continue
-                }
-
-                // Process cleanup
-                try {
-                    bat '''
-                        for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| find ":4200" ^| find "LISTENING"') do (
-                            taskkill /f /pid %%a 2^>nul || echo off
-                        )
-                    '''
-                } catch (Exception e) {
-                    // Process cleanup failed - continue
-                }
-
                 // Publish Robot Framework results
                 try {
                     if (fileExists('robot-tests/output.xml')) {
@@ -295,27 +220,59 @@ pipeline {
 
         success {
             echo 'Pipeline completed successfully ✅'
-            echo 'Application deployed to AKS cluster: shopfer'
+            echo 'Application is running at http://localhost:4200'
+
+            script {
+                try {
+                    bat '''
+                        echo === SUCCESS SUMMARY ===
+                        docker ps --filter "name=shopfer-container" --format "table {{.Names}}\\t{{.Status}}\\t{{.Ports}}"
+                        kubectl get pods -l app=shopfer -o wide 2>nul || echo "AKS deployment status unknown"
+                    '''
+                } catch (Exception e) {
+                    echo "Could not display success summary"
+                }
+            }
         }
 
         failure {
             echo 'Pipeline failed ❌'
 
-            // Enhanced diagnostic on failure
             script {
                 try {
                     bat '''
-                        echo === GENERAL DIAGNOSTIC ===
-                        docker ps -a | find "shopfer" 2>nul || echo No shopfer containers
-                        netstat -an | find "4200" 2>nul || echo Port 4200 not found
-                        if exist robot-tests\\output.xml echo Robot test results available
+                        echo === FAILURE DIAGNOSTIC ===
+                        echo "Docker containers:"
+                        docker ps -a --filter "name=shopfer" --format "table {{.Names}}\\t{{.Status}}\\t{{.Ports}}" 2>nul || echo "No shopfer containers"
 
-                        echo === KUBERNETES DIAGNOSTIC ===
-                        kubectl get pods -l app=shopfer 2>nul || echo No shopfer pods in AKS
-                        kubectl get events --sort-by=.metadata.creationTimestamp | tail -5 2>nul || echo Cannot get recent events
+                        echo "Port 4200 status:"
+                        netstat -an | find "4200" 2>nul || echo "Port 4200 not in use"
+
+                        echo "Container logs (last 20 lines):"
+                        docker logs --tail 20 shopfer-container 2>nul || echo "No container logs available"
+
+                        echo "Robot test results:"
+                        if exist robot-tests\\output.xml echo "Robot test results available" else echo "No robot test results"
+
+                        echo "AKS status:"
+                        kubectl get pods -l app=shopfer 2>nul || echo "Cannot connect to AKS or no shopfer pods"
                     '''
                 } catch (Exception e) {
-                    // Diagnostic failed - continue
+                    echo "Diagnostic failed but continuing..."
+                }
+
+                // Only cleanup on failure
+                try {
+                    bat '''
+                        echo "Cleaning up failed containers..."
+                        docker stop shopfer-container 2>nul || echo "Container already stopped"
+                        docker rm shopfer-container 2>nul || echo "Container already removed"
+                        for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| find ":4200" ^| find "LISTENING"') do (
+                            taskkill /f /pid %%a 2^>nul || echo "Process cleanup"
+                        )
+                    '''
+                } catch (Exception e) {
+                    echo "Cleanup completed with warnings"
                 }
             }
         }
