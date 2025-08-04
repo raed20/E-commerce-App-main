@@ -155,6 +155,7 @@ pipeline {
                                 az aks get-credentials --resource-group %RESOURCE_GROUP% --name %CLUSTER_NAME%
 
                                 echo "Applying Kubernetes manifests..."
+                                kubectl apply -f namespace.yaml
                                 kubectl apply -f service.yaml
                                 kubectl apply -f configmap.yaml
                                 kubectl apply -f deployment.yaml
