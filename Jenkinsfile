@@ -113,6 +113,32 @@ pipeline {
                 '''
             }
         }
+                stage('Deploy to AKS') {
+                    environment {
+                        RESOURCE_GROUP = 'shopfer'
+                        CLUSTER_NAME = 'shopfer'
+                        TENANT_ID = 'dbd6664d-4eb9-46eb-99d8-5c43ba153c61' // replace with your actual tenant ID
+                        ACR_NAME = 'shopfer'          // optional if needed
+                    }
+
+                    steps {
+                        withCredentials([usernamePassword(credentialsId: 'azure-sp', usernameVariable: 'AZURE_CLIENT_ID', passwordVariable: 'AZURE_CLIENT_SECRET')]) {
+                            bat '''
+                                az logout
+                                az login --service-principal -u %AZURE_CLIENT_ID% -p %AZURE_CLIENT_SECRET% --tenant %TENANT_ID%
+
+                                az aks get-credentials --resource-group %RESOURCE_GROUP% --name %CLUSTER_NAME%
+
+                                kubectl apply -f k8s/service.yaml
+                                kubectl apply -f k8s/configmap.yaml
+                                kubectl apply -f k8s/deployment.yaml
+
+                                kubectl rollout status deployment/shopfer --timeout=300s
+                            '''
+                        }
+                    }
+                }
+
     }
 
     post {
