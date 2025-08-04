@@ -155,9 +155,9 @@ pipeline {
                                 az aks get-credentials --resource-group %RESOURCE_GROUP% --name %CLUSTER_NAME%
 
                                 echo "Applying Kubernetes manifests..."
-                                kubectl apply -f k8s/service.yaml
-                                kubectl apply -f k8s/configmap.yaml
-                                kubectl apply -f k8s/deployment.yaml
+                                kubectl apply -f service.yaml
+                                kubectl apply -f configmap.yaml
+                                kubectl apply -f deployment.yaml
 
                                 echo "Waiting for deployment to be ready..."
                                 kubectl rollout status deployment/shopfer --timeout=300s
