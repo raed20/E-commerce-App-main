@@ -152,8 +152,8 @@ pipeline {
                         try {
                             bat '''
                                 az login --service-principal -u %AZURE_CLIENT_ID% -p %AZURE_CLIENT_SECRET% --tenant %TENANT_ID%
-                                az aks get-credentials --resource-group %RESOURCE_GROUP% --name %CLUSTER_NAME%
-
+                                az aks get-credentials --resource-group YOUR_RESOURCE_GROUP --name YOUR_CLUSTER_NAME --overwrite-existing
+                                kubectl get pods -l app=shopfer -o wide || echo "AKS deployment status unknown"
                                 echo "Applying Kubernetes manifests..."
                                 kubectl apply -f namespace.yaml
                                 kubectl apply -f service.yaml
