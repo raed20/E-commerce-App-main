@@ -113,32 +113,128 @@ pipeline {
                 '''
             }
         }
-                stage('Deploy to AKS') {
-                    environment {
-                        RESOURCE_GROUP = 'shopfer'
-                        CLUSTER_NAME = 'shopfer'
-                        TENANT_ID = 'dbd6664d-4eb9-46eb-99d8-5c43ba153c61' // replace with your actual tenant ID
-                        ACR_NAME = 'shopfer'          // optional if needed
-                    }
 
-                    steps {
-                        withCredentials([usernamePassword(credentialsId: 'azure-sp', usernameVariable: 'AZURE_CLIENT_ID', passwordVariable: 'AZURE_CLIENT_SECRET')]) {
+        stage('Deploy to AKS') {
+            environment {
+                RESOURCE_GROUP = 'shopfer'
+                CLUSTER_NAME = 'shopfer'
+                TENANT_ID = 'dbd6664d-4eb9-46eb-99d8-5c43ba153c61'
+                ACR_NAME = 'shopfer'
+            }
+
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'azure-sp', usernameVariable: 'AZURE_CLIENT_ID', passwordVariable: 'AZURE_CLIENT_SECRET')]) {
+                    script {
+                        try {
+                            // Login to Azure and verify access
                             bat '''
-                                az logout
+                                echo "=== Logging into Azure ==="
                                 az login --service-principal -u %AZURE_CLIENT_ID% -p %AZURE_CLIENT_SECRET% --tenant %TENANT_ID%
 
-                                az aks get-credentials --resource-group %RESOURCE_GROUP% --name %CLUSTER_NAME%
+                                echo "=== Verifying AKS cluster access ==="
+                                az aks show --resource-group %RESOURCE_GROUP% --name %CLUSTER_NAME% --query "name" -o tsv
+                            '''
 
-                                kubectl apply -f k8s/service.yaml
+                            // Get AKS credentials
+                            bat '''
+                                echo "=== Getting AKS credentials ==="
+                                az aks get-credentials --resource-group %RESOURCE_GROUP% --name %CLUSTER_NAME% --overwrite-existing
+
+                                echo "=== Testing kubectl connection ==="
+                                kubectl cluster-info
+                                kubectl get nodes
+                            '''
+
+                            // Verify Kubernetes manifests exist
+                            bat '''
+                                echo "=== Verifying Kubernetes manifests ==="
+                                if not exist "k8s" (
+                                    echo "ERROR: k8s directory not found"
+                                    exit /b 1
+                                )
+                                if not exist "k8s\\service.yaml" (
+                                    echo "ERROR: k8s/service.yaml not found"
+                                    exit /b 1
+                                )
+                                if not exist "k8s\\configmap.yaml" (
+                                    echo "ERROR: k8s/configmap.yaml not found"
+                                    exit /b 1
+                                )
+                                if not exist "k8s\\deployment.yaml" (
+                                    echo "ERROR: k8s/deployment.yaml not found"
+                                    exit /b 1
+                                )
+                                echo "All manifest files found"
+                            '''
+
+                            // Update deployment image with the correct Docker Hub reference
+                            withCredentials([usernamePassword(credentialsId: 'docker-hub-login', usernameVariable: 'DOCKER_HUB_USER', passwordVariable: 'DOCKER_HUB_PASS')]) {
+                                bat '''
+                                    echo "=== Updating deployment image reference ==="
+                                    powershell -Command "(Get-Content k8s\\deployment.yaml) -replace 'image:.*shopferimgg.*', 'image: %DOCKER_HUB_USER%/shopferimgg:latest' | Set-Content k8s\\deployment.yaml"
+                                '''
+                            }
+
+                            // Apply Kubernetes manifests
+                            bat '''
+                                echo "=== Applying Kubernetes manifests ==="
                                 kubectl apply -f k8s/configmap.yaml
+                                kubectl apply -f k8s/service.yaml
                                 kubectl apply -f k8s/deployment.yaml
 
+                                echo "=== Waiting for deployment rollout ==="
                                 kubectl rollout status deployment/shopfer --timeout=300s
+
+                                echo "=== Deployment Status ==="
+                                kubectl get pods -l app=shopfer
+                                kubectl get services
+                                kubectl describe deployment shopfer
                             '''
+
+                        } catch (Exception e) {
+                            echo "AKS deployment failed: ${e.getMessage()}"
+
+                            // Comprehensive diagnostics
+                            bat '''
+                                echo "=== DEPLOYMENT DIAGNOSTICS ==="
+
+                                echo "--- Current kubectl context ---"
+                                kubectl config current-context 2>nul || echo "No kubectl context set"
+
+                                echo "--- Cluster nodes ---"
+                                kubectl get nodes 2>nul || echo "Cannot get nodes"
+
+                                echo "--- All pods ---"
+                                kubectl get pods --all-namespaces 2>nul || echo "Cannot get pods"
+
+                                echo "--- Shopfer pods (if any) ---"
+                                kubectl get pods -l app=shopfer 2>nul || echo "No shopfer pods found"
+
+                                echo "--- Services ---"
+                                kubectl get services 2>nul || echo "Cannot get services"
+
+                                echo "--- Recent events ---"
+                                kubectl get events --sort-by=.metadata.creationTimestamp --field-selector type!=Normal 2>nul || echo "Cannot get events"
+
+                                echo "--- Deployment details ---"
+                                kubectl describe deployment shopfer 2>nul || echo "No shopfer deployment found"
+
+                                echo "--- ReplicaSet details ---"
+                                kubectl describe rs -l app=shopfer 2>nul || echo "No shopfer replicasets found"
+
+                                echo "--- Pod logs (if any pods exist) ---"
+                                for /f %%i in ('kubectl get pods -l app^=shopfer -o name 2^>nul') do (
+                                    echo "Logs for %%i:"
+                                    kubectl logs %%i --tail=50 2>nul || echo "Cannot get logs for %%i"
+                                )
+                            '''
+
+                            throw e
                         }
                     }
                 }
-
+            }
+        }
     }
 
     post {
@@ -199,19 +295,24 @@ pipeline {
 
         success {
             echo 'Pipeline completed successfully ✅'
+            echo 'Application deployed to AKS cluster: shopfer'
         }
 
         failure {
             echo 'Pipeline failed ❌'
 
-            // Minimal diagnostic on failure
+            // Enhanced diagnostic on failure
             script {
                 try {
                     bat '''
-                        echo === DIAGNOSTIC ===
+                        echo === GENERAL DIAGNOSTIC ===
                         docker ps -a | find "shopfer" 2>nul || echo No shopfer containers
                         netstat -an | find "4200" 2>nul || echo Port 4200 not found
                         if exist robot-tests\\output.xml echo Robot test results available
+
+                        echo === KUBERNETES DIAGNOSTIC ===
+                        kubectl get pods -l app=shopfer 2>nul || echo No shopfer pods in AKS
+                        kubectl get events --sort-by=.metadata.creationTimestamp | tail -5 2>nul || echo Cannot get recent events
                     '''
                 } catch (Exception e) {
                     // Diagnostic failed - continue
