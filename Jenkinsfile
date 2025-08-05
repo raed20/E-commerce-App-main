@@ -169,7 +169,7 @@ pipeline {
                             bat 'kubectl apply -f deployment.yaml'
 
                             // Wait for deployment to complete
-                            bat 'kubectl rollout status deployment/shopfer --timeout=300s'
+                            bat 'kubectl rollout status deployment/shopfer-app --timeout=300s'
 
                             // Get pod status
                             bat 'kubectl get pods -l app=shopfer -o wide'
