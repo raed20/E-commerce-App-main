@@ -151,37 +151,42 @@ pipeline {
                     script {
                         try {
                             // Azure Login
-                            bat 'az login --service-principal -u %AZURE_CLIENT_ID% -p %AZURE_CLIENT_SECRET% --tenant %TENANT_ID%'
+                            bat """
+                            az login --service-principal -u ${AZURE_CLIENT_ID} -p ${AZURE_CLIENT_SECRET} --tenant ${TENANT_ID}
+                            """
 
                             // Get AKS Credentials
-                            bat 'az aks get-credentials --resource-group %RESOURCE_GROUP% --name %CLUSTER_NAME% --overwrite-existing'
+                            bat """
+                            az aks get-credentials --resource-group ${RESOURCE_GROUP} --name ${CLUSTER_NAME} --overwrite-existing
+                            """
 
                             // Test kubectl connectivity
                             bat 'kubectl cluster-info'
 
-                            // Apply manifests one by one
+                            // Apply Kubernetes manifests
                             bat 'kubectl apply -f service.yaml'
                             bat 'kubectl apply -f configmap.yaml'
                             bat 'kubectl apply -f deployment.yaml'
 
-                            // Wait for deployment
+                            // Wait for deployment to complete
                             bat 'kubectl rollout status deployment/shopfer --timeout=300s'
 
-                            // Check final status
+                            // Get pod status
                             bat 'kubectl get pods -l app=shopfer -o wide'
 
                         } catch (Exception e) {
-                            echo "AKS deployment failed: ${e.getMessage()}"
+                            echo "⚠️ AKS deployment failed: ${e.getMessage()}"
 
-                            // Diagnostics
+                            // Diagnostic on failure
                             try {
                                 bat 'kubectl get pods -l app=shopfer -o wide || echo "No pods found"'
                                 bat 'kubectl describe deployment shopfer || echo "No deployment found"'
                                 bat 'kubectl get events --sort-by=.metadata.creationTimestamp | tail -10 || echo "No events"'
                             } catch (Exception diagnosticError) {
-                                echo "Could not retrieve diagnostics"
+                                echo "⚠️ Could not retrieve diagnostics: ${diagnosticError.getMessage()}"
                             }
-                            throw e
+
+                            throw e // Re-throw to mark pipeline as failed
                         }
                     }
                 }
