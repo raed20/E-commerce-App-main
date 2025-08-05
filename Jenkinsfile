@@ -150,34 +150,36 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'azure-sp', usernameVariable: 'AZURE_CLIENT_ID', passwordVariable: 'AZURE_CLIENT_SECRET')]) {
                     script {
                         try {
-                            bat '''
-                                az login --service-principal -u %AZURE_CLIENT_ID% -p %AZURE_CLIENT_SECRET% --tenant %TENANT_ID%
-                                az aks get-credentials --resource-group YOUR_RESOURCE_GROUP --name YOUR_CLUSTER_NAME --overwrite-existing
-                                kubectl get pods -l app=shopfer -o wide || echo "AKS deployment status unknown"
-                                echo "Applying Kubernetes manifests..."
-                                kubectl apply -f namespace.yaml
-                                kubectl apply -f service.yaml
-                                kubectl apply -f configmap.yaml
-                                kubectl apply -f deployment.yaml
+                            // Azure Login
+                            bat 'az login --service-principal -u %AZURE_CLIENT_ID% -p %AZURE_CLIENT_SECRET% --tenant %TENANT_ID%'
 
-                                echo "Waiting for deployment to be ready..."
-                                kubectl rollout status deployment/shopfer --timeout=300s
+                            // Get AKS Credentials
+                            bat 'az aks get-credentials --resource-group %RESOURCE_GROUP% --name %CLUSTER_NAME% --overwrite-existing'
 
-                                echo "Checking pod status..."
-                                kubectl get pods -l app=shopfer
-                            '''
+                            // Test kubectl connectivity
+                            bat 'kubectl cluster-info'
+
+                            // Apply manifests one by one
+                            bat 'kubectl apply -f service.yaml'
+                            bat 'kubectl apply -f configmap.yaml'
+                            bat 'kubectl apply -f deployment.yaml'
+
+                            // Wait for deployment
+                            bat 'kubectl rollout status deployment/shopfer --timeout=300s'
+
+                            // Check final status
+                            bat 'kubectl get pods -l app=shopfer -o wide'
+
                         } catch (Exception e) {
                             echo "AKS deployment failed: ${e.getMessage()}"
-                            // Show diagnostic information
+
+                            // Diagnostics
                             try {
-                                bat '''
-                                    echo "=== AKS DIAGNOSTIC ==="
-                                    kubectl get pods -l app=shopfer -o wide || echo "No pods found"
-                                    kubectl describe deployment shopfer || echo "No deployment found"
-                                    kubectl get events --sort-by=.metadata.creationTimestamp | tail -10 || echo "No events"
-                                '''
+                                bat 'kubectl get pods -l app=shopfer -o wide || echo "No pods found"'
+                                bat 'kubectl describe deployment shopfer || echo "No deployment found"'
+                                bat 'kubectl get events --sort-by=.metadata.creationTimestamp | tail -10 || echo "No events"'
                             } catch (Exception diagnosticError) {
-                                echo "Could not retrieve AKS diagnostics"
+                                echo "Could not retrieve diagnostics"
                             }
                             throw e
                         }
