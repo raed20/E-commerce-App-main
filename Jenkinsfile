@@ -167,6 +167,7 @@ pipeline {
                             bat 'kubectl apply -f service.yaml'
                             bat 'kubectl apply -f configmap.yaml'
                             bat 'kubectl apply -f deployment.yaml'
+                            bat "kubectl rollout restart deployment shopfer-app"
 
                             // Wait for deployment to complete
                             bat 'kubectl rollout status deployment/shopfer-app --timeout=300s'
