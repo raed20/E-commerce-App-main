@@ -6,7 +6,7 @@ metadata:
     app: shopfer
     version: v1
 spec:
-  replicas: 2  # Nombre de pods à déployer
+  replicas: 2
   selector:
     matchLabels:
       app: shopfer
@@ -17,7 +17,6 @@ spec:
     spec:
       containers:
         - name: shopfer-container
-          # Remplacez 'votre-username' par votre nom d'utilisateur Docker Hub
           image: raed00/shopferimgg:latest
           ports:
             - containerPort: 4200
