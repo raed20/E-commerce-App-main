@@ -22,7 +22,7 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv(credentialsId: 'SQube-tokenn', installationName: 'SonarQube') {
+                withSonarQubeEnv(credentialsId: 'SQube-token', installationName: 'SonarQube') {
                     bat 'echo %PATH%'
                     bat 'where sonar-scanner || echo sonar-scanner not found'
                     bat 'sonar-scanner -v || echo sonar-scanner command failed'
