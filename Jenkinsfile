@@ -61,7 +61,6 @@ pipeline {
                 }
             }
         }
-
         stage('Run Docker Container') {
             steps {
                 bat 'docker run -d --name shopfer-container -p 4200:4200 shopferimgg'
