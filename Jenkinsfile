@@ -35,7 +35,6 @@ pipeline {
                 }
             }
         }
-
         stage('Build Angular Application') {
             steps {
                 bat 'call npm run build'
