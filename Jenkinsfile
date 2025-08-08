@@ -25,7 +25,7 @@ pipeline {
                 withSonarQubeEnv(credentialsId: 'SQube-token', installationName: 'SonarQube') {
                     script {
                         def scannerHome = tool 'SonarScanner'
-                        bat "\"${scannerHome}\\bin\\sonar-scanner.bat\" -Dsonar.projectKey=my-app -Dsonar.sources=src"
+                        bat "\"${scannerHome}\\bin\\sonar-scanner.bat\" -Dsonar.projectKey=E-commerce-App-main -Dsonar.sources=src"
                     }
                 }
             }
