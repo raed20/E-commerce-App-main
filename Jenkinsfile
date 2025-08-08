@@ -23,12 +23,12 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv(credentialsId: 'SQube-token', installationName: 'SonarQube') {
-                    bat 'sonar-scanner'
-                    bat 'where sonar-scanner || echo sonar-scanner not found'
-                    bat 'sonar-scanner -v || echo sonar-scanner command failed'
+                    def scannerHome = tool 'SonarScanner'
+                    bat "\"${scannerHome}\\bin\\sonar-scanner\" -X"
                 }
             }
         }
+
 
         stage('Quality Gate') {
             steps {
