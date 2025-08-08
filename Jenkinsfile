@@ -20,32 +20,6 @@ pipeline {
             }
         }
 
-        stage('Setup Robot Framework Environment') {
-            steps {
-                bat '''
-                    if not exist robot-tests mkdir robot-tests
-                    cd robot-tests
-                    if exist robot_env rmdir /s /q robot_env
-                    python -m venv robot_env
-                    robot_env\\Scripts\\python.exe -m pip install --upgrade pip --quiet
-                    robot_env\\Scripts\\pip install robotframework robotframework-seleniumlibrary selenium webdriver-manager --quiet
-                '''
-            }
-        }
-
-        stage('Run Robot Framework tests') {
-            steps {
-                bat '''
-                    cd robot-tests
-                    robot_env\\Scripts\\robot --outputdir . ^
-                                              --variable BROWSER:headlesschrome ^
-                                              --variable URL:http://localhost:4200 ^
-                                              --loglevel INFO ^
-                                              hello.robot
-                '''
-            }
-        }
-
         stage('Build Angular Application') {
             steps {
                 bat 'call npm run build'
@@ -135,6 +109,32 @@ pipeline {
                         error("Application failed to start within timeout")
                     }
                 }
+            }
+        }
+
+        stage('Setup Robot Framework Environment') {
+            steps {
+                bat '''
+                    if not exist robot-tests mkdir robot-tests
+                    cd robot-tests
+                    if exist robot_env rmdir /s /q robot_env
+                    python -m venv robot_env
+                    robot_env\\Scripts\\python.exe -m pip install --upgrade pip --quiet
+                    robot_env\\Scripts\\pip install robotframework robotframework-seleniumlibrary selenium webdriver-manager --quiet
+                '''
+            }
+        }
+
+        stage('Run Robot Framework tests') {
+            steps {
+                bat '''
+                    cd robot-tests
+                    robot_env\\Scripts\\robot --outputdir . ^
+                                              --variable BROWSER:headlesschrome ^
+                                              --variable URL:http://localhost:4200 ^
+                                              --loglevel INFO ^
+                                              hello.robot
+                '''
             }
         }
 
