@@ -23,11 +23,14 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv(credentialsId: 'SQube-token', installationName: 'SonarQube') {
-                    def scannerHome = tool 'SonarScanner'
-                    bat "\"${scannerHome}\\bin\\sonar-scanner\" -X"
+                    script {
+                        def scannerHome = tool 'SonarScanner'
+                        bat "\"${scannerHome}\\bin\\sonar-scanner.bat\" -Dsonar.projectKey=my-app -Dsonar.sources=src"
+                    }
                 }
             }
         }
+
 
 
         stage('Quality Gate') {
