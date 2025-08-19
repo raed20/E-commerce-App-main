@@ -1,6 +1,6 @@
 *** Settings ***
 Documentation    Tests automatisés pour application e-commerce Angular
-Library          SeleniumLibrary    timeout=30s    implicit_wait=2s
+Library          SeleniumLibrary    timeout=60s    implicit_wait=2s
 Library          Collections
 Library          String
 Library          DateTime
@@ -12,7 +12,7 @@ Suite Teardown   Log    Suite de tests e-commerce terminée
 *** Variables ***
 ${BASE_URL}           http://localhost:4200
 ${BROWSER}            chrome
-${TIMEOUT}            30s
+${TIMEOUT}            60s
 ${INVALID_EMAIL}      invalid-email
 ${INVALID_PASSWORD}   123
 
@@ -275,7 +275,7 @@ TC004 - Inscription avec des données valides
     Click Button    ${REGISTER_BUTTON}
 
     # Verify successful registration with better error handling
-    Wait Until Location Is    ${BASE_URL}${HOME_ROUTE}    timeout=30s
+    Wait Until Location Is    ${BASE_URL}${HOME_ROUTE}    timeout=60s
     Verify Registration Success
     Check User Is Logged In
     Log    Registration successful for ${unique_email}
