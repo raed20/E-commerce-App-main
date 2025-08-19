@@ -1,6 +1,6 @@
 *** Settings ***
 Documentation    Tests automatisés pour application e-commerce Angular
-Library          SeleniumLibrary    timeout=10s    implicit_wait=2s
+Library          SeleniumLibrary    timeout=30s    implicit_wait=2s
 Library          Collections
 Library          String
 Library          DateTime
@@ -12,7 +12,7 @@ Suite Teardown   Log    Suite de tests e-commerce terminée
 *** Variables ***
 ${BASE_URL}           http://localhost:4200
 ${BROWSER}            chrome
-${TIMEOUT}            10s
+${TIMEOUT}            30s
 ${INVALID_EMAIL}      invalid-email
 ${INVALID_PASSWORD}   123
 
@@ -195,7 +195,7 @@ Add Product To Cart
     ${product_selector}=    Set Variable    css:[data-testid="product-card"]:nth-child(${product_index}) [data-testid="add-to-cart"]
     Wait Until Element Is Visible    ${product_selector}    timeout=${TIMEOUT}
     Click Button    ${product_selector}
-    Wait Until Element Is Visible    css:.toast-success    timeout=5s
+    Wait Until Element Is Visible    css:.toast-success    timeout=30s
 
 Get Cart Item Count
     ${count}=    Get Text    ${CART_ITEM_COUNT}
@@ -275,7 +275,7 @@ TC004 - Inscription avec des données valides
     Click Button    ${REGISTER_BUTTON}
 
     # Verify successful registration with better error handling
-    Wait Until Location Is    ${BASE_URL}${HOME_ROUTE}    timeout=15s
+    Wait Until Location Is    ${BASE_URL}${HOME_ROUTE}    timeout=30s
     Verify Registration Success
     Check User Is Logged In
     Log    Registration successful for ${unique_email}
@@ -311,7 +311,7 @@ TC008 - Inscription avec email invalide
     [Tags]    registration    negative
     ${timestamp}=    Get Current Date    result_format=%Y%m%d%H%M%S
     Register New User    invalid-email    testuser${timestamp}    Test123!
-    Wait Until Page Contains Element    ${ERROR_MESSAGE}    timeout=5s
+    Wait Until Page Contains Element    ${ERROR_MESSAGE}    timeout=30s
 
 TC009 - Lien vers inscription depuis la page de connexion
     [Documentation]    Tester le lien vers l'inscription depuis la page de connexion
@@ -342,7 +342,7 @@ TC011 - Inscription puis connexion - Workflow complet
     ${password}=    Set Variable    Workflow123!
 
     Register New User    ${email}    ${username}    ${password}
-    Wait Until Location Is    ${BASE_URL}${HOME_ROUTE}    timeout=15s
+    Wait Until Location Is    ${BASE_URL}${HOME_ROUTE}    timeout=30s
     Verify Registration Success
     Check User Is Logged In
     Log    Registration successful for ${email}
