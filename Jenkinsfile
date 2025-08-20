@@ -187,7 +187,7 @@ pipeline {
                             bat 'kubectl apply -f configmap.yaml'
                             bat 'kubectl apply -f deployment.yaml'
                             bat "kubectl rollout restart deployment shopfer-app"
-                            bat "az aks get-credentials --resource-group shopferr --name shopferr --overwrite-existing
+                            bat "az aks get-credentials --resource-group shopferr --name shopferr --overwrite-existing"
 "
 
                             // Wait for deployment to complete
