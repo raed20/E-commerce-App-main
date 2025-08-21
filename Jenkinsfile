@@ -155,36 +155,39 @@ pipeline {
                                                       --variable BROWSER:headlesschrome ^
                                                       --variable URL:http://localhost:4200 ^
                                                       --loglevel INFO ^
-                                                      --continue-on-failure ^
                                                       hello.robot
                         ''',
                         returnStatus: true
                     )
 
                     // Handle different exit codes
+                    // Robot Framework exit codes: 0=success, 1-249=failed tests, 250-255=error
                     if (robotResult == 0) {
                         echo "✅ All Robot Framework tests passed!"
-                    } else if (robotResult == 1) {
-                        echo "⚠️  Some Robot Framework tests failed, but continuing pipeline"
-                        currentBuild.result = 'UNSTABLE'
-                    } else if (robotResult == 2) {
-                        echo "⚠️  Some Robot Framework tests failed, but continuing pipeline"
+                    } else if (robotResult >= 1 && robotResult <= 249) {
+                        echo "⚠️  Some Robot Framework tests failed (exit code: ${robotResult}), but continuing pipeline"
                         currentBuild.result = 'UNSTABLE'
                     } else {
                         echo "❌ Robot Framework encountered an error (exit code: ${robotResult})"
-                        // You can decide whether to fail the pipeline or continue
                         currentBuild.result = 'UNSTABLE'
                     }
 
-                    // Always show test summary
+                    // Always show test summary if output.xml exists
                     try {
-                        bat '''
-                            cd robot-tests
-                            echo === ROBOT FRAMEWORK TEST SUMMARY ===
-                            findstr /C:"tests," output.xml | findstr /C:"passed," || echo "Could not parse test results"
-                        '''
+                        if (fileExists('robot-tests/output.xml')) {
+                            echo "📊 Robot Framework test completed - check artifacts for detailed results"
+                            bat '''
+                                cd robot-tests
+                                echo === ROBOT FRAMEWORK TEST SUMMARY ===
+                                echo Output file exists: output.xml
+                                if exist log.html echo Log file exists: log.html
+                                if exist report.html echo Report file exists: report.html
+                            '''
+                        } else {
+                            echo "⚠️ No Robot Framework output.xml file found"
+                        }
                     } catch (Exception e) {
-                        echo "Could not display test summary"
+                        echo "Could not display test summary: ${e.getMessage()}"
                     }
                 }
             }
