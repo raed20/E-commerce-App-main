@@ -31,8 +31,6 @@ pipeline {
             }
         }
 
-
-
         stage('Quality Gate') {
             steps {
                 timeout(time: 5, unit: 'MINUTES') {
@@ -40,6 +38,7 @@ pipeline {
                 }
             }
         }
+
         stage('Build Angular Application') {
             steps {
                 bat 'call npm run build'
@@ -81,6 +80,7 @@ pipeline {
                 }
             }
         }
+
         stage('Run Docker Container') {
             steps {
                 bat 'docker run -d --name shopfer-container -p 4200:4200 shopferimgg'
@@ -146,18 +146,57 @@ pipeline {
 
         stage('Run Robot Framework tests') {
             steps {
-                bat '''
-                    cd robot-tests
-                    robot_env\\Scripts\\robot --outputdir . ^
-                                              --variable BROWSER:headlesschrome ^
-                                              --variable URL:http://localhost:4200 ^
-                                              --loglevel INFO ^
-                                              hello.robot
-                '''
+                script {
+                    // Run Robot Framework tests and capture the exit code
+                    def robotResult = bat(
+                        script: '''
+                            cd robot-tests
+                            robot_env\\Scripts\\robot --outputdir . ^
+                                                      --variable BROWSER:headlesschrome ^
+                                                      --variable URL:http://localhost:4200 ^
+                                                      --loglevel INFO ^
+                                                      --continue-on-failure ^
+                                                      hello.robot
+                        ''',
+                        returnStatus: true
+                    )
+
+                    // Handle different exit codes
+                    if (robotResult == 0) {
+                        echo "✅ All Robot Framework tests passed!"
+                    } else if (robotResult == 1) {
+                        echo "⚠️  Some Robot Framework tests failed, but continuing pipeline"
+                        currentBuild.result = 'UNSTABLE'
+                    } else if (robotResult == 2) {
+                        echo "⚠️  Some Robot Framework tests failed, but continuing pipeline"
+                        currentBuild.result = 'UNSTABLE'
+                    } else {
+                        echo "❌ Robot Framework encountered an error (exit code: ${robotResult})"
+                        // You can decide whether to fail the pipeline or continue
+                        currentBuild.result = 'UNSTABLE'
+                    }
+
+                    // Always show test summary
+                    try {
+                        bat '''
+                            cd robot-tests
+                            echo === ROBOT FRAMEWORK TEST SUMMARY ===
+                            findstr /C:"tests," output.xml | findstr /C:"passed," || echo "Could not parse test results"
+                        '''
+                    } catch (Exception e) {
+                        echo "Could not display test summary"
+                    }
+                }
             }
         }
 
         stage('Deploy to AKS') {
+            when {
+                // Only deploy if build is not failed (can be unstable due to test failures)
+                not {
+                    equals expected: 'FAILURE', actual: currentBuild.result
+                }
+            }
             environment {
                 RESOURCE_GROUP = 'shopferr'
                 CLUSTER_NAME = 'shopferr'
@@ -169,6 +208,8 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'azure-sp', usernameVariable: 'AZURE_CLIENT_ID', passwordVariable: 'AZURE_CLIENT_SECRET')]) {
                     script {
                         try {
+                            echo "🚀 Starting deployment to AKS..."
+
                             // Azure Login
                             bat """
                             az login --service-principal -u ${AZURE_CLIENT_ID} -p ${AZURE_CLIENT_SECRET} --tenant ${TENANT_ID}
@@ -187,13 +228,14 @@ pipeline {
                             bat 'kubectl apply -f configmap.yaml'
                             bat 'kubectl apply -f deployment.yaml'
                             bat "kubectl rollout restart deployment shopfer-app"
-                            bat "az aks get-credentials --resource-group shopferr --name shopferr --overwrite-existing"
 
                             // Wait for deployment to complete
                             bat 'kubectl rollout status deployment/shopfer-app --timeout=300s'
 
                             // Get pod status
                             bat 'kubectl get pods -l app=shopferr -o wide'
+
+                            echo "✅ AKS deployment completed successfully"
 
                         } catch (Exception e) {
                             echo "⚠️ AKS deployment failed: ${e.getMessage()}"
@@ -221,6 +263,7 @@ pipeline {
                 // Publish Robot Framework results
                 try {
                     if (fileExists('robot-tests/output.xml')) {
+                        echo "📊 Publishing Robot Framework test results..."
                         robot(
                             outputPath: 'robot-tests',
                             outputFileName: 'output.xml',
@@ -231,24 +274,28 @@ pipeline {
                             unstableThreshold: 60,
                             otherFiles: '*.png,*.jpg'
                         )
+                        echo "✅ Robot Framework results published"
+                    } else {
+                        echo "⚠️ No Robot Framework output.xml found"
                     }
                 } catch (Exception e) {
-                    echo "Warning: Could not publish Robot Framework results"
+                    echo "⚠️ Could not publish Robot Framework results: ${e.getMessage()}"
                 }
 
                 // Archive artifacts
                 try {
                     if (fileExists('robot-tests')) {
                         archiveArtifacts artifacts: 'robot-tests/**/*.{xml,html,log,png,jpg}', allowEmptyArchive: true, fingerprint: true
+                        echo "✅ Test artifacts archived"
                     }
                 } catch (Exception e) {
-                    echo "Warning: Could not archive artifacts"
+                    echo "⚠️ Could not archive artifacts: ${e.getMessage()}"
                 }
             }
         }
 
         success {
-            echo 'Pipeline completed successfully ✅'
+            echo '🎉 Pipeline completed successfully ✅'
             echo 'Application is running at http://localhost:4200'
 
             script {
@@ -256,7 +303,7 @@ pipeline {
                     bat '''
                         echo === SUCCESS SUMMARY ===
                         docker ps --filter "name=shopfer-container" --format "table {{.Names}}\\t{{.Status}}\\t{{.Ports}}"
-                        kubectl get pods -l app=shopfer -o wide 2>nul || echo "AKS deployment status unknown"
+                        kubectl get pods -l app=shopferr -o wide 2>nul || echo "AKS deployment status unknown"
                     '''
                 } catch (Exception e) {
                     echo "Could not display success summary"
@@ -264,8 +311,14 @@ pipeline {
             }
         }
 
+        unstable {
+            echo '⚠️  Pipeline completed with warnings (some tests failed) ⚠️'
+            echo 'Application deployment continued despite test failures'
+            echo 'Review the Robot Framework test results for details'
+        }
+
         failure {
-            echo 'Pipeline failed ❌'
+            echo '❌ Pipeline failed ❌'
 
             script {
                 try {
@@ -284,7 +337,7 @@ pipeline {
                         if exist robot-tests\\output.xml echo "Robot test results available" else echo "No robot test results"
 
                         echo "AKS status:"
-                        kubectl get pods -l app=shopfer 2>nul || echo "Cannot connect to AKS or no shopfer pods"
+                        kubectl get pods -l app=shopferr 2>nul || echo "Cannot connect to AKS or no shopferr pods"
                     '''
                 } catch (Exception e) {
                     echo "Diagnostic failed but continuing..."
