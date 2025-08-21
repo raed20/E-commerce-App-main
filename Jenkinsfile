@@ -159,10 +159,10 @@ pipeline {
 
         stage('Deploy to AKS') {
             environment {
-                RESOURCE_GROUP = 'shopfer'
-                CLUSTER_NAME = 'shopfer'
+                RESOURCE_GROUP = 'shopferr'
+                CLUSTER_NAME = 'shopferr'
                 TENANT_ID = 'dbd6664d-4eb9-46eb-99d8-5c43ba153c61'
-                ACR_NAME = 'shopfer'
+                ACR_NAME = 'shopferr'
             }
 
             steps {
